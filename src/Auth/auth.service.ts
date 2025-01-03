@@ -27,6 +27,10 @@ export class AuthService {
     });
   }
 
+  async findUserByName(name: string): Promise<any> {
+    return this.userRepository.findUserByName(name);
+  }
+
   async signUp(signUpDto: SignUpDto): Promise<string> {
     const { email, password, name, type = 'user', phone, address } = signUpDto;
 
@@ -60,5 +64,14 @@ export class AuthService {
     }
 
     return this.generateToken({ id: user._id.toString(), email: user.email, type: user.type });
+  }
+
+  async getUserInfoByName(name: string): Promise<any> {
+    const user = await this.findUserByName(name); 
+    if (!user) {
+      throw new UnauthorizedException('User not found.');
+    }
+    const { password, ...userDetails } = user.toObject();
+    return userDetails;
   }
 }

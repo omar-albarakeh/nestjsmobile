@@ -49,4 +49,5 @@ export class AuthController {
       throw new BadRequestException('Login failed. Please check your credentials and try again.');
     }
   }
+  
 }
