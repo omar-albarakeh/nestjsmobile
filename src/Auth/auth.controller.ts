@@ -5,6 +5,11 @@ import {
   BadRequestException,
   UnauthorizedException,
   ConflictException,
+  HttpCode,
+  HttpStatus,
+  Get,
+  Param,
+  Request,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { SignUpDto } from './dto/SignUpDto';
@@ -49,5 +54,25 @@ export class AuthController {
       throw new BadRequestException('Login failed. Please check your credentials and try again.');
     }
   }
-  
+  @Get('/user/:name')
+  @HttpCode(HttpStatus.OK)
+  async getUserInfoByName(
+    @Param('name') name: string,
+    @Request() req: any, 
+  ): Promise<{ status: string; message: string; data: any }> {
+    try {
+      const user = await this.authService.getUserInfoByName(name);
+
+      return {
+        status: 'success',
+        message: 'User information retrieved successfully.',
+        data: user,
+      };
+    } catch (error) {
+      if (error instanceof UnauthorizedException) {
+        throw error;
+      }
+      throw new BadRequestException('Failed to retrieve user information.');
+    }
+  }
 }
