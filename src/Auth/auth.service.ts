@@ -4,6 +4,8 @@ import { JwtService } from '@nestjs/jwt';
 import { SignUpDto } from './dto/SignUpDto';
 import { LoginDto } from './dto/LoginDto';
 import * as bcrypt from 'bcryptjs';
+import { User } from './schemas/user.schema';
+
 
 @Injectable()
 export class AuthService {
@@ -20,15 +22,19 @@ export class AuthService {
     return bcrypt.compare(plainPassword, hashedPassword);
   }
 
-  private generateToken(payload: { id: string; email: string; type: string }): string {
+  private generateToken(payload: { id: string; email: string; name: string; type: string }): string {
     return this.jwtService.sign(payload, {
       secret: process.env.JWT_SECRET,
       expiresIn: '1h',
     });
   }
 
-  async findUserByName(name: string): Promise<any> {
+  async findUserByName(name: string): Promise<User | null> {
     return this.userRepository.findUserByName(name);
+  }
+
+  async findUserByEmail(email: string): Promise<User | null> {
+    return this.userRepository.findUserByEmail(email); // Adjust for your ORM or database logic
   }
 
   async signUp(signUpDto: SignUpDto): Promise<string> {
@@ -48,29 +54,53 @@ export class AuthService {
       address,
     });
 
-    return this.generateToken({ id: user._id.toString(), email: user.email, type: user.type });
+    return this.generateToken({
+      id: user._id.toString(),
+      email: user.email,
+      name: user.name,
+      type: user.type,
+    });
   }
 
   async login(loginDto: LoginDto): Promise<string> {
     const { email, password } = loginDto;
-    const user = await this.userRepository.findUserByEmail(email);
+    const user = await this.findUserByEmail(email);
 
     if (!user) {
-      throw new UnauthorizedException('Invalid email.');
+      throw new UnauthorizedException('Invalid email or user not found.');
     }
 
     if (!(await this.verifyPassword(password, user.password))) {
       throw new UnauthorizedException('Invalid password.');
     }
 
-    return this.generateToken({ id: user._id.toString(), email: user.email, type: user.type });
+    return this.generateToken({
+      id: user._id.toString(),
+      email: user.email,
+      name: user.name,
+      type: user.type,
+    });
+  }
+
+  async validateUser(email: string, password: string): Promise<User | null> {
+    const user = await this.findUserByEmail(email);
+    if (!user) {
+      throw new UnauthorizedException('Invalid email or user not found.');
+    }
+
+    if (!(await this.verifyPassword(password, user.password))) {
+      throw new UnauthorizedException('Invalid password.');
+    }
+
+    return user;
   }
 
   async getUserInfoByName(name: string): Promise<any> {
-    const user = await this.findUserByName(name); 
+    const user = await this.findUserByName(name);
     if (!user) {
       throw new UnauthorizedException('User not found.');
     }
+
     const { password, ...userDetails } = user.toObject();
     return userDetails;
   }
