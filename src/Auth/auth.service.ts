@@ -27,5 +27,25 @@ export class AuthService {
     });
   }
 
- 
+  async signUp(signUpDto: SignUpDto): Promise<string> {
+    const { email, password, name, type = 'user', phone, address } = signUpDto;
+
+    if (await this.userRepository.isEmailTaken(email)) {
+      throw new ConflictException('Email is already registered.');
+    }
+
+    const hashedPassword = await this.hashPassword(password);
+    const user = await this.userRepository.createUser({
+      name,
+      email,
+      password: hashedPassword,
+      type,
+      phone,
+      address,
+    });
+
+    return this.generateToken({ id: user._id.toString(), email: user.email, type: user.type });
+  }
+
+  
 }
