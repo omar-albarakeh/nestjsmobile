@@ -33,5 +33,20 @@ export class AuthController {
     }
   }
 
- 
+  @Post('/login')
+  async login(@Body() loginDto: LoginDto): Promise<{ status: string; message: string; data: { token: string } }> {
+    try {
+      const token = await this.authService.login(loginDto);
+      return {
+        status: 'success',
+        message: 'Login successful. Welcome back!',
+        data: { token },
+      };
+    } catch (error) {
+      if (error instanceof UnauthorizedException) {
+        throw error;
+      }
+      throw new BadRequestException('Login failed. Please check your credentials and try again.');
+    }
+  }
 }
