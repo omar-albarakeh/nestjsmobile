@@ -47,5 +47,18 @@ export class AuthService {
     return this.generateToken({ id: user._id.toString(), email: user.email, type: user.type });
   }
 
-  
+  async login(loginDto: LoginDto): Promise<string> {
+    const { email, password } = loginDto;
+    const user = await this.userRepository.findUserByEmail(email);
+
+    if (!user) {
+      throw new UnauthorizedException('Invalid email.');
+    }
+
+    if (!(await this.verifyPassword(password, user.password))) {
+      throw new UnauthorizedException('Invalid password.');
+    }
+
+    return this.generateToken({ id: user._id.toString(), email: user.email, type: user.type });
+  }
 }
