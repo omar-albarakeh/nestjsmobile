@@ -1,11 +1,15 @@
-import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
+// AuthService
+import {
+  Injectable,
+  UnauthorizedException,
+  ConflictException,
+} from '@nestjs/common';
 import { UserRepository } from './repositories/user.repository';
 import { JwtService } from '@nestjs/jwt';
 import { SignUpDto } from './dto/SignUpDto';
 import { LoginDto } from './dto/LoginDto';
 import * as bcrypt from 'bcryptjs';
 import { User } from './schemas/user.schema';
-
 
 @Injectable()
 export class AuthService {
@@ -29,12 +33,11 @@ export class AuthService {
     });
   }
 
-  async findUserByName(name: string): Promise<User | null> {
-    return this.userRepository.findUserByName(name);
-  }
-
-  async findUserByEmail(email: string): Promise<User | null> {
-    return this.userRepository.findUserByEmail(email); // Adjust for your ORM or database logic
+  private generateRefreshToken(payload: { id: string }): string {
+    return this.jwtService.sign(payload, {
+      secret: process.env.JWT_REFRESH_SECRET,
+      expiresIn: '7d',
+    });
   }
 
   async signUp(signUpDto: SignUpDto): Promise<string> {
@@ -62,46 +65,63 @@ export class AuthService {
     });
   }
 
-  async login(loginDto: LoginDto): Promise<string> {
+  async login(loginDto: LoginDto): Promise<{ accessToken: string; refreshToken: string }> {
     const { email, password } = loginDto;
-    const user = await this.findUserByEmail(email);
+    const user = await this.userRepository.findUserByEmail(email);
 
-    if (!user) {
-      throw new UnauthorizedException('Invalid email or user not found.');
+    if (!user || !(await this.verifyPassword(password, user.password))) {
+      throw new UnauthorizedException('Invalid credentials.');
     }
 
-    if (!(await this.verifyPassword(password, user.password))) {
-      throw new UnauthorizedException('Invalid password.');
-    }
-
-    return this.generateToken({
+    const accessToken = this.generateToken({
       id: user._id.toString(),
       email: user.email,
       name: user.name,
       type: user.type,
     });
+
+    const refreshToken = this.generateRefreshToken({ id: user._id.toString() });
+
+    // Optionally save refreshToken in the database
+    return { accessToken, refreshToken };
   }
 
-  async validateUser(email: string, password: string): Promise<User | null> {
-    const user = await this.findUserByEmail(email);
-    if (!user) {
-      throw new UnauthorizedException('Invalid email or user not found.');
-    }
+  async refreshToken(refreshToken: string): Promise<string> {
+    try {
+      const decoded = this.jwtService.verify(refreshToken, {
+        secret: process.env.JWT_REFRESH_SECRET,
+      });
 
-    if (!(await this.verifyPassword(password, user.password))) {
-      throw new UnauthorizedException('Invalid password.');
-    }
+      const user = await this.userRepository.findUserById(decoded.id);
 
-    return user;
+      if (!user) {
+        throw new UnauthorizedException('Invalid refresh token.');
+      }
+
+      return this.generateToken({
+        id: user._id.toString(),
+        email: user.email,
+        name: user.name,
+        type: user.type,
+      });
+    } catch (error) {
+      throw new UnauthorizedException('Invalid or expired refresh token.');
+    }
   }
 
-  async getUserInfoByName(name: string): Promise<any> {
-    const user = await this.findUserByName(name);
-    if (!user) {
-      throw new UnauthorizedException('User not found.');
-    }
+  async getUserInfoFromToken(token: string): Promise<any> {
+    try {
+      const decoded = this.jwtService.verify(token, { secret: process.env.JWT_SECRET });
+      const user = await this.userRepository.findUserById(decoded.id);
 
-    const { password, ...userDetails } = user.toObject();
-    return userDetails;
+      if (!user) {
+        throw new UnauthorizedException('User not found.');
+      }
+
+      const { password, ...userDetails } = user.toObject({ versionKey: false });
+      return userDetails;
+    } catch (error) {
+      throw new UnauthorizedException('Failed to retrieve user information.');
+    }
   }
 }
