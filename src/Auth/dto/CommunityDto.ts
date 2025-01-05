@@ -3,10 +3,28 @@ import {
   IsString, 
   IsArray, 
   IsNumber, 
-  MinLength 
+  MinLength, 
+  ValidateNested, 
+  IsOptional 
 } from 'class-validator';
+import { Type } from 'class-transformer';
 
-export class Community {
+class Comment {
+  @IsNotEmpty()
+  @IsString()
+  userId: string;
+
+  @IsNotEmpty()
+  @IsString()
+  @MinLength(1, { message: 'Comment must not be empty' })
+  comment: string;
+
+  @IsOptional()
+  @IsString()
+  createdAt?: string; 
+}
+
+export class CommunityPost {
   @IsNotEmpty()
   @IsString()
   postId: string;
@@ -16,10 +34,19 @@ export class Community {
   @MinLength(1, { message: 'Content must not be empty' })
   content: string;
 
+  @IsOptional()
+  @IsString()
+  image?: string;
+
+  @IsOptional()
+  @IsString()
+  createdAt?: string;
+
   @IsNumber()
   likes: number;
 
   @IsArray()
-  @IsString({ each: true })
-  comments: string[];
+  @ValidateNested({ each: true })
+  @Type(() => Comment)
+  comments: Comment[];
 }
