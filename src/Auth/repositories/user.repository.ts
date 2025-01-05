@@ -30,22 +30,26 @@ export class UserRepository {
   }
 
   async updateSolarInfo(
-    userId: string,
-    solarInfo: Partial<User['solarInfo']>,
-  ): Promise<User | null> {
-    return await this.userModel
-      .findByIdAndUpdate(
-        userId,
-        {
-          $set: {
-            solarInfo,
-            isSolarInfoComplete: true,
-          },
+  userId: string,
+  solarInfo: Partial<User['solarInfo']>,
+): Promise<User['solarInfo'] | null> {
+  const user = await this.userModel
+    .findByIdAndUpdate(
+      userId,
+      {
+        $set: {
+          solarInfo,
+          isSolarInfoComplete: true,
         },
-        { new: true },
-      )
-      .exec();
-  }
+      },
+      { new: true },
+    )
+    .select('solarInfo') 
+    .exec();
+
+  return user?.solarInfo || null;
+}
+
 
   async updateUser(userId: string, updates: Partial<User>): Promise<User | null> {
     return await this.userModel

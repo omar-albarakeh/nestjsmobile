@@ -7,12 +7,13 @@ import {
   HttpStatus,
   UnauthorizedException,
   Res,
-  Request,
+  Req,
 } from '@nestjs/common';
-import { Response } from 'express';
+import { Response, Request } from 'express';
 import { AuthService } from './auth.service';
 import { SignUpDto } from './dto/SignUpDto';
 import { LoginDto } from './dto/LoginDto';
+import { UpdateSolarInfoDto } from './dto/UpdateSolarInfoDto';
 
 @Controller('auth')
 export class AuthController {
@@ -35,8 +36,13 @@ export class AuthController {
   async login(
     @Body() loginDto: LoginDto,
     @Res({ passthrough: true }) res: Response,
-  ): Promise<{ status: string; message: string; data: { accessToken: string; isSolarInfoComplete: boolean } }> {
-    const { accessToken, refreshToken, isSolarInfoComplete } = await this.authService.login(loginDto);
+  ): Promise<{
+    status: string;
+    message: string;
+    data: { accessToken: string; isSolarInfoComplete: boolean };
+  }> {
+    const { accessToken, refreshToken, isSolarInfoComplete } =
+      await this.authService.login(loginDto);
 
     res.cookie('refresh_token', refreshToken, {
       httpOnly: true,
@@ -54,8 +60,14 @@ export class AuthController {
 
   @Post('/refresh-token')
   async refreshAccessToken(
-    @Body('refreshToken') refreshToken: string,
+    @Req() req: Request,
   ): Promise<{ status: string; data: { accessToken: string } }> {
+    const refreshToken = req.cookies?.refresh_token;
+
+    if (!refreshToken) {
+      throw new UnauthorizedException('Refresh token is missing.');
+    }
+
     const newAccessToken = await this.authService.refreshToken(refreshToken);
     return {
       status: 'success',
@@ -64,7 +76,7 @@ export class AuthController {
   }
 
   @Get('/user-info')
-  async getUserInfo(@Request() req: any): Promise<{ status: string; data: any }> {
+  async getUserInfo(@Req() req: Request): Promise<{ status: string; data: any }> {
     const token = this.extractToken(req.headers.authorization);
     const userInfo = await this.authService.getUserInfoFromToken(token);
     return {
@@ -75,7 +87,7 @@ export class AuthController {
 
   @Post('/mark-solar-info-complete')
   async markSolarInfoComplete(
-    @Request() req: any,
+    @Req() req: Request,
   ): Promise<{ status: string; message: string }> {
     const token = this.extractToken(req.headers.authorization);
     await this.authService.markSolarInfoComplete(token);
@@ -85,9 +97,22 @@ export class AuthController {
     };
   }
 
+  @Post('/update-solar-info')
+  async updateSolarInfo(
+    @Body() updateSolarInfoDto: UpdateSolarInfoDto,
+    @Req() req: Request,
+  ): Promise<{ status: string; message: string }> {
+    const token = this.extractToken(req.headers.authorization);
+    await this.authService.updateSolarInfo(token, updateSolarInfoDto);
+    return {
+      status: 'success',
+      message: 'Solar information updated successfully.',
+    };
+  }
+
   private extractToken(authorizationHeader: string): string {
     if (!authorizationHeader) {
-      throw new UnauthorizedException('Authorization header missing.');
+      throw new UnauthorizedException('Authorization header is missing.');
     }
 
     const parts = authorizationHeader.split(' ');

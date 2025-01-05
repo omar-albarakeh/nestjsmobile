@@ -1,4 +1,3 @@
-// AuthService
 import {
   Injectable,
   UnauthorizedException,
@@ -9,7 +8,7 @@ import { JwtService } from '@nestjs/jwt';
 import { SignUpDto } from './dto/SignUpDto';
 import { LoginDto } from './dto/LoginDto';
 import * as bcrypt from 'bcryptjs';
-import { User } from './schemas/user.schema';
+import { UpdateSolarInfoDto } from './dto/UpdateSolarInfoDto';
 
 @Injectable()
 export class AuthService {
@@ -22,7 +21,10 @@ export class AuthService {
     return bcrypt.hash(password, 10);
   }
 
-  private async verifyPassword(plainPassword: string, hashedPassword: string): Promise<boolean> {
+  private async verifyPassword(
+    plainPassword: string,
+    hashedPassword: string,
+  ): Promise<boolean> {
     return bcrypt.compare(plainPassword, hashedPassword);
   }
 
@@ -48,6 +50,7 @@ export class AuthService {
     }
 
     const hashedPassword = await this.hashPassword(password);
+
     const user = await this.userRepository.createUser({
       name,
       email,
@@ -65,26 +68,28 @@ export class AuthService {
     });
   }
 
-  async login(loginDto: LoginDto): Promise<{ accessToken: string; refreshToken: string; isSolarInfoComplete: boolean }> {
-  const { email, password } = loginDto;
-  const user = await this.userRepository.findUserByEmail(email);
+  async login(
+    loginDto: LoginDto,
+  ): Promise<{ accessToken: string; refreshToken: string; isSolarInfoComplete: boolean }> {
+    const { email, password } = loginDto;
 
-  if (!user || !(await this.verifyPassword(password, user.password))) {
-    throw new UnauthorizedException('Invalid credentials.');
+    const user = await this.userRepository.findUserByEmail(email);
+
+    if (!user || !(await this.verifyPassword(password, user.password))) {
+      throw new UnauthorizedException('Invalid credentials.');
+    }
+
+    const accessToken = this.generateToken({
+      id: user._id.toString(),
+      email: user.email,
+      name: user.name,
+      type: user.type,
+    });
+
+    const refreshToken = this.generateRefreshToken({ id: user._id.toString() });
+
+    return { accessToken, refreshToken, isSolarInfoComplete: user.isSolarInfoComplete };
   }
-
-  const accessToken = this.generateToken({
-    id: user._id.toString(),
-    email: user.email,
-    name: user.name,
-    type: user.type,
-  });
-
-  const refreshToken = this.generateRefreshToken({ id: user._id.toString() });
-
-  return { accessToken, refreshToken, isSolarInfoComplete: user.isSolarInfoComplete };
-}
-
 
   async refreshToken(refreshToken: string): Promise<string> {
     try {
@@ -104,7 +109,7 @@ export class AuthService {
         name: user.name,
         type: user.type,
       });
-    } catch (error) {
+    } catch {
       throw new UnauthorizedException('Invalid or expired refresh token.');
     }
   }
@@ -112,6 +117,7 @@ export class AuthService {
   async getUserInfoFromToken(token: string): Promise<any> {
     try {
       const decoded = this.jwtService.verify(token, { secret: process.env.JWT_SECRET });
+
       const user = await this.userRepository.findUserById(decoded.id);
 
       if (!user) {
@@ -119,26 +125,49 @@ export class AuthService {
       }
 
       const { password, ...userDetails } = user.toObject({ versionKey: false });
+
       return userDetails;
-    } catch (error) {
+    } catch {
       throw new UnauthorizedException('Failed to retrieve user information.');
     }
   }
 
- async markSolarInfoComplete(token: string): Promise<void> {
-  try {
-    const decoded = this.jwtService.verify(token, { secret: process.env.JWT_SECRET });
-    const user = await this.userRepository.findUserById(decoded.id);
+  async markSolarInfoComplete(token: string): Promise<void> {
+    try {
+      const decoded = this.jwtService.verify(token, { secret: process.env.JWT_SECRET });
 
-    if (!user) {
-      throw new UnauthorizedException('User not found.');
+      const user = await this.userRepository.findUserById(decoded.id);
+
+      if (!user) {
+        throw new UnauthorizedException('User not found.');
+      }
+
+      await this.userRepository.updateUser(user._id.toString(), { isSolarInfoComplete: true });
+    } catch {
+      throw new UnauthorizedException('Invalid or expired token.');
     }
-
-    user.isSolarInfoComplete = true;
-    await user.save();
-  } catch (error) {
-    throw new UnauthorizedException('Invalid or expired token.');
   }
-}
 
+  async updateSolarInfo(token: string, updateSolarInfoDto: UpdateSolarInfoDto): Promise<any> {
+    try {
+      const decoded = this.jwtService.verify(token, { secret: process.env.JWT_SECRET });
+
+      const user = await this.userRepository.findUserById(decoded.id);
+
+      if (!user) {
+        throw new UnauthorizedException('User not found.');
+      }
+
+      // Use `findByIdAndUpdate` to update solarInfo directly
+      const updatedUser = await this.userRepository.updateSolarInfo(user._id.toString(), updateSolarInfoDto);
+
+      if (!updatedUser) {
+        throw new UnauthorizedException('Failed to update solar information.');
+      }
+
+      return updatedUser;
+    } catch {
+      throw new UnauthorizedException('Invalid or expired token.');
+    }
+  }
 }
