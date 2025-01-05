@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { Document, Schema as MongooseSchema } from 'mongoose';
 
 @Schema()
 class SolarInfo {
@@ -41,7 +41,7 @@ export class User extends Document {
   @Prop({ default: false })
   isSolarInfoComplete: boolean;
 
-  @Prop({ type: SolarInfoSchema }) // Embed solarInfo as a subdocument
+  @Prop({ type: SolarInfoSchema, required: false })
   solarInfo?: SolarInfo;
 }
 

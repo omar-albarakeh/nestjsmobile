@@ -8,7 +8,8 @@ export class UserRepository {
   constructor(@InjectModel(User.name) private readonly userModel: Model<User>) {}
 
   async createUser(userData: Partial<User>): Promise<User> {
-    return await new this.userModel(userData).save();
+    const user = new this.userModel(userData);
+    return await user.save();
   }
 
   async findUserByEmail(email: string): Promise<User | null> {
@@ -28,10 +29,27 @@ export class UserRepository {
     return !!user;
   }
 
-  // Add solarInfo to a user
-  async updateSolarInfo(userId: string, solarInfo: Partial<User['solarInfo']>): Promise<User | null> {
+  async updateSolarInfo(
+    userId: string,
+    solarInfo: Partial<User['solarInfo']>,
+  ): Promise<User | null> {
     return await this.userModel
-      .findByIdAndUpdate(userId, { $set: { solarInfo, isSolarInfoComplete: true } }, { new: true })
+      .findByIdAndUpdate(
+        userId,
+        {
+          $set: {
+            solarInfo,
+            isSolarInfoComplete: true,
+          },
+        },
+        { new: true },
+      )
+      .exec();
+  }
+
+  async updateUser(userId: string, updates: Partial<User>): Promise<User | null> {
+    return await this.userModel
+      .findByIdAndUpdate(userId, { $set: updates }, { new: true })
       .exec();
   }
 }
