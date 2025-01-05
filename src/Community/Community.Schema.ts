@@ -1,30 +1,17 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
-
-@Schema()
-class Comment {
-  @Prop({ required: true })
-  userId: string;
-
-  @Prop({ required: true })
-  comment: string;
-
-  @Prop({ default: Date.now })
-  createdAt: Date;
-}
-
-const CommentSchema = SchemaFactory.createForClass(Comment);
+import {CommentSchema } from './Comment.Schema';
 
 @Schema()
 export class CommunityPost extends Document {
   @Prop({ required: true })
-  postId: string;
+  postId: string; 
 
   @Prop({ required: true })
   content: string;
 
   @Prop({ required: false })
-  image?: string;
+  image?: string; 
 
   @Prop({ default: Date.now })
   createdAt: Date;
@@ -34,6 +21,9 @@ export class CommunityPost extends Document {
 
   @Prop({ type: [CommentSchema], default: [] })
   comments: Comment[];
+
+  @Prop({ required: true })
+  createdBy: string; 
 }
 
 export const CommunityPostSchema = SchemaFactory.createForClass(CommunityPost);

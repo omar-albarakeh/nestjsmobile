@@ -1,23 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
-import { CommunityPost, CommunityPostSchema } from './Community.Schema';
-
-@Schema()
-class SolarInfo {
-  @Prop({ required: true })
-  panelsNb: string;
-
-  @Prop({ required: true })
-  panelEfficiency: string;
-
-  @Prop({ required: true })
-  panelWatt: string;
-
-  @Prop({ required: true })
-  panelArea: string;
-}
-
-const SolarInfoSchema = SchemaFactory.createForClass(SolarInfo);
+import {SolarInfo, SolarInfoSchema } from '../../SolarInfo/Solar.Schema';
+import { CommunityPost, CommunityPostSchema } from '../../Community/Community.Schema';
 
 @Schema()
 export class User extends Document {
@@ -31,7 +15,7 @@ export class User extends Document {
   password: string;
 
   @Prop({ required: true })
-  type: string;
+  type: string; 
 
   @Prop({ required: true })
   phone: string;
