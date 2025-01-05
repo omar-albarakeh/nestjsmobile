@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 import {SolarInfo, SolarInfoSchema } from '../../SolarInfo/Solar.Schema';
-import { CommunityPost, CommunityPostSchema } from '../../Community/Community.Schema';
+import { CommunityPost, CommunityPostSchema } from '../../Community/Schemas/Community.Schema';
 
 @Schema()
 export class User extends Document {

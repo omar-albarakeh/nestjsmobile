@@ -5,24 +5,11 @@ import {
   IsNumber, 
   MinLength, 
   ValidateNested, 
-  IsOptional 
+  IsOptional, 
+  IsDate 
 } from 'class-validator';
 import { Type } from 'class-transformer';
-
-class Comment {
-  @IsNotEmpty()
-  @IsString()
-  userId: string;
-
-  @IsNotEmpty()
-  @IsString()
-  @MinLength(1, { message: 'Comment must not be empty' })
-  comment: string;
-
-  @IsOptional()
-  @IsString()
-  createdAt?: string; 
-}
+import { Comment } from './CommunityDto';
 
 export class CommunityPost {
   @IsNotEmpty()
@@ -39,8 +26,8 @@ export class CommunityPost {
   image?: string;
 
   @IsOptional()
-  @IsString()
-  createdAt?: string;
+  @IsDate()
+  createdAt?: Date;
 
   @IsNumber()
   likes: number;
