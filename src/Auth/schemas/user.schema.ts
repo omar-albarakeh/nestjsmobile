@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, Schema as MongooseSchema } from 'mongoose';
+import { Document } from 'mongoose';
+import { CommunityPost, CommunityPostSchema } from './Community.Schema';
 
 @Schema()
 class SolarInfo {
@@ -43,6 +44,9 @@ export class User extends Document {
 
   @Prop({ type: SolarInfoSchema, required: false })
   solarInfo?: SolarInfo;
+
+  @Prop({ type: [CommunityPostSchema], default: [] })
+  communityPosts: CommunityPost[]; 
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
