@@ -1,4 +1,3 @@
-// AuthController
 import {
   Body,
   Controller,
@@ -36,20 +35,20 @@ export class AuthController {
   async login(
     @Body() loginDto: LoginDto,
     @Res({ passthrough: true }) res: Response,
-  ): Promise<{ status: string; message: string; data: { accessToken: string } }> {
-    const { accessToken, refreshToken } = await this.authService.login(loginDto);
+  ): Promise<{ status: string; message: string; data: { accessToken: string; isSolarInfoComplete: boolean } }> {
+    const { accessToken, refreshToken, isSolarInfoComplete } = await this.authService.login(loginDto);
 
     res.cookie('refresh_token', refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000, 
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 
     return {
       status: 'success',
       message: 'Login successful.',
-      data: { accessToken },
+      data: { accessToken, isSolarInfoComplete },
     };
   }
 
@@ -71,6 +70,18 @@ export class AuthController {
     return {
       status: 'success',
       data: userInfo,
+    };
+  }
+
+  @Post('/mark-solar-info-complete')
+  async markSolarInfoComplete(
+    @Request() req: any,
+  ): Promise<{ status: string; message: string }> {
+    const token = this.extractToken(req.headers.authorization);
+    await this.authService.markSolarInfoComplete(token);
+    return {
+      status: 'success',
+      message: 'Solar information marked as complete.',
     };
   }
 

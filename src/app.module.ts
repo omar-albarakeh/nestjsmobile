@@ -4,6 +4,7 @@ import { envValidationSchema } from './config/env.validation';
 import { ConfigService } from '@nestjs/config';
 import { Module } from '@nestjs/common';
 import { AuthModule } from './auth/auth.module';
+import { SolarModule } from './solar/solar.module'; // Adjusted to match the `solar` module name
 
 @Module({
   imports: [
@@ -12,12 +13,13 @@ import { AuthModule } from './auth/auth.module';
       isGlobal: true,
       validationSchema: envValidationSchema,
     }),
-    MongooseModule.forRoot(process.env.DB_URI),
+    MongooseModule.forRoot(process.env.DB_URI), // Simplified connection options
     AuthModule,
+    SolarModule, // Updated to match the correct module name
   ],
 })
 export class AppModule {
-  constructor(private configService: ConfigService) {
+  constructor(private readonly configService: ConfigService) {
     const dbUri = this.configService.get<string>('DB_URI');
     const jwtSecret = this.configService.get<string>('JWT_SECRET');
     const jwtExpires = this.configService.get<string>('JWT_EXPIRES');
@@ -28,4 +30,3 @@ export class AppModule {
     console.log('JWT_EXPIRES:', jwtExpires ? jwtExpires : 'Default: 1h');
   }
 }
-

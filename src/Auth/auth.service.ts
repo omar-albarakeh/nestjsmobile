@@ -65,26 +65,26 @@ export class AuthService {
     });
   }
 
-  async login(loginDto: LoginDto): Promise<{ accessToken: string; refreshToken: string }> {
-    const { email, password } = loginDto;
-    const user = await this.userRepository.findUserByEmail(email);
+  async login(loginDto: LoginDto): Promise<{ accessToken: string; refreshToken: string; isSolarInfoComplete: boolean }> {
+  const { email, password } = loginDto;
+  const user = await this.userRepository.findUserByEmail(email);
 
-    if (!user || !(await this.verifyPassword(password, user.password))) {
-      throw new UnauthorizedException('Invalid credentials.');
-    }
-
-    const accessToken = this.generateToken({
-      id: user._id.toString(),
-      email: user.email,
-      name: user.name,
-      type: user.type,
-    });
-
-    const refreshToken = this.generateRefreshToken({ id: user._id.toString() });
-
-    // Optionally save refreshToken in the database
-    return { accessToken, refreshToken };
+  if (!user || !(await this.verifyPassword(password, user.password))) {
+    throw new UnauthorizedException('Invalid credentials.');
   }
+
+  const accessToken = this.generateToken({
+    id: user._id.toString(),
+    email: user.email,
+    name: user.name,
+    type: user.type,
+  });
+
+  const refreshToken = this.generateRefreshToken({ id: user._id.toString() });
+
+  return { accessToken, refreshToken, isSolarInfoComplete: user.isSolarInfoComplete };
+}
+
 
   async refreshToken(refreshToken: string): Promise<string> {
     try {
@@ -124,4 +124,21 @@ export class AuthService {
       throw new UnauthorizedException('Failed to retrieve user information.');
     }
   }
+
+ async markSolarInfoComplete(token: string): Promise<void> {
+  try {
+    const decoded = this.jwtService.verify(token, { secret: process.env.JWT_SECRET });
+    const user = await this.userRepository.findUserById(decoded.id);
+
+    if (!user) {
+      throw new UnauthorizedException('User not found.');
+    }
+
+    user.isSolarInfoComplete = true;
+    await user.save();
+  } catch (error) {
+    throw new UnauthorizedException('Invalid or expired token.');
+  }
+}
+
 }

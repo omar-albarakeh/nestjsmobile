@@ -18,12 +18,20 @@ export class UserRepository {
   async findUserById(id: string): Promise<User | null> {
     return await this.userModel.findById(id).exec();
   }
+
   async findUserByName(name: string): Promise<User | null> {
-    return await this.userModel.findOne({name}).exec();
+    return await this.userModel.findOne({ name }).exec();
   }
 
   async isEmailTaken(email: string): Promise<boolean> {
     const user = await this.userModel.findOne({ email }).exec();
     return !!user;
+  }
+
+  // Add solarInfo to a user
+  async updateSolarInfo(userId: string, solarInfo: Partial<User['solarInfo']>): Promise<User | null> {
+    return await this.userModel
+      .findByIdAndUpdate(userId, { $set: { solarInfo, isSolarInfoComplete: true } }, { new: true })
+      .exec();
   }
 }
