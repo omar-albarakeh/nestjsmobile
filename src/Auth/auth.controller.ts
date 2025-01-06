@@ -6,9 +6,12 @@ import {
   HttpCode,
   HttpStatus,
   UnauthorizedException,
+  InternalServerErrorException,
   Res,
   Req,
+  UseGuards,
 } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import { Response, Request } from 'express';
 import { AuthService } from './auth.service';
 import { SignUpDto } from './dto/SignUpDto';
@@ -124,14 +127,22 @@ export class AuthController {
     return parts[1];
   }
 
-  @Get('/contacts')
+@Get('/contacts')
+@UseGuards(AuthGuard)
 async getAllContacts(): Promise<{ status: string; data: any[] }> {
-  const contacts = await this.authService.getAllContacts();
-  return {
-    status: 'success',
-    data: contacts,
-  };
+  try {
+    const contacts = await this.authService.getAllContacts();
+
+    return {
+      status: 'success',
+      data: contacts,
+    };
+  } catch (error) {
+    console.error('Error fetching contacts:', error.message);
+    throw new InternalServerErrorException('Failed to fetch contacts');
+  }
 }
+
 
  
 }
