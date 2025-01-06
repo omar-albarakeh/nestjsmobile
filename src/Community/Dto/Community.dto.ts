@@ -9,7 +9,7 @@ import {
   IsDate 
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { Comment } from './CommunityDto';
+import { Comment } from './Comments';
 
 export class CommunityPost {
   @IsNotEmpty()

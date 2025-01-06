@@ -57,6 +57,9 @@ export class UserRepository {
       .exec();
   }
 
+  async findAllUsers(): Promise<User[]> {
+  return await this.userModel.find().select('name email phone').exec();
+}
 
  
 }
