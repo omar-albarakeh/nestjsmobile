@@ -14,6 +14,7 @@ import { AuthService } from './auth.service';
 import { SignUpDto } from './dto/SignUpDto';
 import { LoginDto } from './dto/LoginDto';
 import { UpdateSolarInfoDto } from './dto/UpdateSolarInfoDto';
+import { User } from './schemas/user.schema'; 
 
 @Controller('auth')
 export class AuthController {
@@ -122,4 +123,15 @@ export class AuthController {
 
     return parts[1];
   }
+
+  @Get('/contacts')
+async getAllContacts(): Promise<{ status: string; data: any[] }> {
+  const contacts = await this.authService.getAllContacts();
+  return {
+    status: 'success',
+    data: contacts,
+  };
+}
+
+ 
 }
