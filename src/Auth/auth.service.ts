@@ -2,6 +2,7 @@ import {
   Injectable,
   UnauthorizedException,
   ConflictException,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { UserRepository } from './repositories/user.repository';
 import { JwtService } from '@nestjs/jwt';
@@ -170,15 +171,21 @@ export class AuthService {
     }
   }
 
-  async getAllContacts(): Promise<any[]> {
+async getAllContacts(): Promise<any[]> {
+  try {
     const users = await this.userRepository.findAllUsers();
+
     return users.map(user => ({
       id: user._id,
       name: user.name,
       email: user.email,
       phone: user.phone,
     }));
+  } catch (error) {
+    console.error('Error fetching contacts from the database:', error.message);
+    throw new InternalServerErrorException('Failed to fetch contacts');
   }
+}
 }
 
 
