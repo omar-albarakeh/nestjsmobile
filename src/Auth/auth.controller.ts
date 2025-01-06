@@ -164,4 +164,14 @@ export class AuthController {
 
     return parts[1];
   }
+
+  @Get('/me')
+  @UseGuards(AuthGuard('jwt'))  
+  async fetchCurrentUser(@Req() req: Request): Promise<any> {
+    const token = req.headers['authorization']?.split(' ')[1]; 
+    if (!token) {
+      throw new UnauthorizedException('Token is required.');
+    }
+    return this.authService.fetchCurrentUser(token); 
+  }
 }
