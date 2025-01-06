@@ -10,6 +10,7 @@ import { SignUpDto } from './dto/SignUpDto';
 import { LoginDto } from './dto/LoginDto';
 import * as bcrypt from 'bcryptjs';
 import { UpdateSolarInfoDto } from './dto/UpdateSolarInfoDto';
+import { User } from './schemas/user.schema';
 
 @Injectable()
 export class AuthService {
@@ -110,7 +111,8 @@ export class AuthService {
         name: user.name,
         type: user.type,
       });
-    } catch {
+    } catch (error) {
+      console.error('Refresh token error:', error.message);
       throw new UnauthorizedException('Invalid or expired refresh token.');
     }
   }
@@ -128,7 +130,8 @@ export class AuthService {
       const { password, ...userDetails } = user.toObject({ versionKey: false });
 
       return userDetails;
-    } catch {
+    } catch (error) {
+      console.error('Get user info error:', error.message);
       throw new UnauthorizedException('Failed to retrieve user information.');
     }
   }
@@ -144,7 +147,8 @@ export class AuthService {
       }
 
       await this.userRepository.updateUser(user._id.toString(), { isSolarInfoComplete: true });
-    } catch {
+    } catch (error) {
+      console.error('Mark solar info complete error:', error.message);
       throw new UnauthorizedException('Invalid or expired token.');
     }
   }
@@ -162,30 +166,46 @@ export class AuthService {
       const updatedUser = await this.userRepository.updateSolarInfo(user._id.toString(), updateSolarInfoDto);
 
       if (!updatedUser) {
-        throw new UnauthorizedException('Failed to update solar information.');
+        throw new InternalServerErrorException('Failed to update solar information.');
       }
 
       return updatedUser;
-    } catch {
+    } catch (error) {
+      console.error('Update solar info error:', error.message);
       throw new UnauthorizedException('Invalid or expired token.');
     }
   }
 
-async getAllContacts(): Promise<any[]> {
-  try {
-    const users = await this.userRepository.findAllUsers();
+  async getAllContacts(): Promise<any[]> {
+    try {
+      const users = await this.userRepository.findAllUsers();
 
-    return users.map(user => ({
-      id: user._id,
-      name: user.name,
-      email: user.email,
-      phone: user.phone,
-    }));
-  } catch (error) {
-    console.error('Error fetching contacts from the database:', error.message);
-    throw new InternalServerErrorException('Failed to fetch contacts');
+      return users.map(user => ({
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+      }));
+    } catch (error) {
+      console.error('Error fetching contacts from the database:', error.message);
+      throw new InternalServerErrorException('Failed to fetch contacts');
+    }
+  }
+
+  async fetchCurrentUser(token: string): Promise<User> {
+    try {
+      const decoded = this.jwtService.verify(token, { secret: process.env.JWT_SECRET });
+
+      const user = await this.userRepository.findUserById(decoded.id);
+
+      if (!user) {
+        throw new UnauthorizedException('User not found.');
+      }
+      const { password, ...userInfo } = user.toObject();
+      return userInfo;
+    } catch (error) {
+      console.error('Error fetching current user:', error.message);
+      throw new UnauthorizedException('Invalid or expired token.');
+    }
   }
 }
-}
-
-

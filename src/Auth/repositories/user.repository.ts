@@ -61,5 +61,4 @@ export class UserRepository {
   return await this.userModel.find().select('name email phone').exec();
 }
 
- 
 }
