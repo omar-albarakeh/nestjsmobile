@@ -158,7 +158,6 @@ export class AuthService {
         throw new UnauthorizedException('User not found.');
       }
 
-      // Use `findByIdAndUpdate` to update solarInfo directly
       const updatedUser = await this.userRepository.updateSolarInfo(user._id.toString(), updateSolarInfoDto);
 
       if (!updatedUser) {
@@ -170,4 +169,16 @@ export class AuthService {
       throw new UnauthorizedException('Invalid or expired token.');
     }
   }
+
+  async getAllContacts(): Promise<any[]> {
+    const users = await this.userRepository.findAllUsers();
+    return users.map(user => ({
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      phone: user.phone,
+    }));
+  }
 }
+
+
