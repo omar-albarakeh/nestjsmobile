@@ -15,3 +15,5 @@ export interface Message extends Document {
   timestamp: Date;
   read: boolean;
 }
+
+export type MessageDocument = Message & Document;

@@ -13,3 +13,5 @@ export interface Chat extends Document {
   lastMessage: string;
   lastUpdated: Date;
 }
+
+export type ChatDocument = Chat & Document;

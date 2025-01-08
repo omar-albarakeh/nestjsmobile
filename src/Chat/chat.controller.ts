@@ -1,8 +1,7 @@
-// src/controllers/chat.controller.ts
 import { Controller, Post, Body, Get, Param, UseGuards } from '@nestjs/common';
-import { ChatService } from '../services/chat.service';
+import { ChatService } from './chat.service';
 import { AuthGuard } from '@nestjs/passport';
-import { MessageDto } from '../dto/message.dto';
+import { MessageDto } from './message.dto';
 
 @Controller('chat')
 export class ChatController {
