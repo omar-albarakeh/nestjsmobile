@@ -14,4 +14,15 @@ export class ChatController {
     return this.chatService.sendMessage(messageDto);
   }
 
+  @Get('messages/:userId')
+  @UseGuards(AuthGuard('jwt'))
+  async getMessages(@Param('userId') userId: string) {
+    return this.chatService.getMessages(userId);
+  }
+
+  @Get('chats')
+  @UseGuards(AuthGuard('jwt'))
+  async getChats() {
+    return this.chatService.getChats();
+  }
 }
