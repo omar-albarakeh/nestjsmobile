@@ -2,14 +2,15 @@ import { Controller, Post, Body, Get, Param, UseGuards } from '@nestjs/common';
 import { ChatService } from './chat.service';
 import { AuthGuard } from '@nestjs/passport';
 import { MessageDto } from './message.dto';
+import { ValidationPipe } from '@nestjs/common';
 
-@Controller('chat') 
+@Controller('chat')
 export class ChatController {
   constructor(private readonly chatService: ChatService) {}
 
   @Post('send')
   @UseGuards(AuthGuard('jwt'))
-  async sendMessage(@Body() messageDto: MessageDto) {
+  async sendMessage(@Body(new ValidationPipe()) messageDto: MessageDto) {
     return this.chatService.sendMessage(messageDto);
   }
 

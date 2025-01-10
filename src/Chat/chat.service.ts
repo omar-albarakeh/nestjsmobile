@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Message, MessageDocument } from './message.schema';
@@ -13,51 +13,66 @@ export class ChatService {
   ) {}
 
   async sendMessage(messageDto: MessageDto) {
-  const { sender, receiver, content } = messageDto;
+    const { sender, receiver, content } = messageDto;
 
-  const message = new this.messageModel({
-    sender,
-    receiver,
-    content,
-  });
+    // Validate sender and receiver (e.g., check if they exist in the database)
+    // You can add additional validation here
 
-  await message.save();
-
-  const messageId = message._id.toString(); 
-
-  let chat = await this.chatModel.findOne({
-    participants: { $all: [sender, receiver] },
-  });
-
-  if (!chat) {
-    chat = new this.chatModel({
-      participants: [sender, receiver],
-      messages: [messageId],
-      lastMessage: messageId,
-      lastUpdated: new Date(),
+    const message = new this.messageModel({
+      sender,
+      receiver,
+      content,
     });
-  } else {
-    chat.messages.push(messageId);
-    chat.lastMessage = messageId;
-    chat.lastUpdated = new Date();
+
+    await message.save();
+
+    const messageId = message._id.toString();
+
+    let chat = await this.chatModel.findOne({
+      participants: { $all: [sender, receiver] },
+    });
+
+    if (!chat) {
+      chat = new this.chatModel({
+        participants: [sender, receiver],
+        messages: [messageId],
+        lastMessage: messageId,
+        lastUpdated: new Date(),
+      });
+    } else {
+      chat.messages.push(messageId);
+      chat.lastMessage = messageId;
+      chat.lastUpdated = new Date();
+    }
+
+    await chat.save();
+
+    return message;
   }
 
-  await chat.save();
-
-  return message;
-}
-
   async getMessages(userId: string) {
-    return this.messageModel
+    const messages = await this.messageModel
       .find({ $or: [{ sender: userId }, { receiver: userId }] })
       .populate('sender receiver')
       .exec();
+
+    if (!messages) {
+      throw new NotFoundException('No messages found');
+    }
+
+    return messages;
   }
 
   async getChats() {
-    return this.chatModel
+    const chats = await this.chatModel
       .find()
       .populate('participants lastMessage')
       .exec();
+
+    if (!chats) {
+      throw new NotFoundException('No chats found');
+    }
+
+    return chats;
   }
 }
