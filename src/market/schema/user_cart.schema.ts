@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
-import { User } from '../Auth/schemas/user.schema'; 
+import { User } from '../../Auth/schemas/user.schema'; 
 import { CartItem } from './cart_item';
 
 @Schema()

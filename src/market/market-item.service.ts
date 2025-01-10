@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { MarketItemRepository } from './market-item.repository';
-import { MarketItem } from './product.schema';
+import { MarketItem } from './schema/product.schema';
 
 @Injectable()
 export class MarketItemService {
