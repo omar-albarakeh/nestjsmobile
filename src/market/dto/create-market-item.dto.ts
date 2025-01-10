@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString, IsNumber, IsOptional } from 'class-validator';
+import { IsNotEmpty, IsString, IsNumber, IsUrl, IsPositive, IsOptional } from 'class-validator';
 
 export class CreateMarketItemDto {
   @IsNotEmpty()
@@ -7,6 +7,7 @@ export class CreateMarketItemDto {
 
   @IsNotEmpty()
   @IsNumber()
+  @IsPositive()
   price: number;
 
   @IsNotEmpty()
@@ -18,10 +19,19 @@ export class CreateMarketItemDto {
   description: string;
 
   @IsNotEmpty()
-  @IsString()
+  @IsUrl()
   imageUrl: string;
 
   @IsNotEmpty()
   @IsNumber()
+  @IsPositive()
   stockQuantity: number;
+
+  @IsOptional()
+  @IsString()
+  createdAt?: string;
+
+  @IsOptional()
+  @IsString()
+  updatedAt?: string;
 }
