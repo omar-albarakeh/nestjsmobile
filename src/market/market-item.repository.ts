@@ -1,44 +1,100 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { MarketItem } from './schema/product.schema';
+import { Model, isValidObjectId } from 'mongoose';
+import { Product } from './schema/product.schema';
 import { CreateMarketItemDto } from './dto/create-market-item.dto';
 import { UpdateMarketItemDto } from './dto/update-market-item.dto';
 
 @Injectable()
-export class MarketItemRepository {
+export class ProductRepository {
   constructor(
-    @InjectModel(MarketItem.name) private readonly marketItemModel: Model<MarketItem>,
+    @InjectModel(Product.name) private readonly productModel: Model<Product>,
   ) {}
 
-  async findAll(): Promise<MarketItem[]> {
-    return await this.marketItemModel.find().exec();
+  async findAll(): Promise<Product[]> {
+    return await this.productModel
+      .find()
+      .sort({ createdAt: -1 }) 
+      .exec();
   }
 
-  async findByCategory(category: string): Promise<MarketItem[]> {
-    return await this.marketItemModel.find({ category }).exec();
+  async findByCategory(category: string): Promise<Product[]> {
+    return await this.productModel
+      .find({ category })
+      .sort({ price: 1 })
+      .exec();
   }
 
-  async findById(id: string): Promise<MarketItem | null> {
-    return await this.marketItemModel.findById(id).exec();
+  async findOneById(id: string): Promise<Product> {
+    if (!isValidObjectId(id)) {
+      throw new NotFoundException(`Invalid ID: ${id}`);
+    }
+
+    const product = await this.productModel.findById(id).exec();
+    if (!product) {
+      throw new NotFoundException(`Product with ID ${id} not found`);
+    }
+
+    return product;
   }
 
-  async create(createMarketItemDto: CreateMarketItemDto): Promise<MarketItem> {
-    const marketItem = new this.marketItemModel(createMarketItemDto);
-    return await marketItem.save();
+  async create(createMarketItemDto: CreateMarketItemDto): Promise<Product> {
+    try {
+      const product = new this.productModel(createMarketItemDto);
+      return await product.save();
+    } catch (error) {
+      throw new Error('Failed to create product');
+    }
   }
 
   async update(
     id: string,
     updateMarketItemDto: UpdateMarketItemDto,
-  ): Promise<MarketItem | null> {
-    return await this.marketItemModel
+  ): Promise<Product> {
+    if (!isValidObjectId(id)) {
+      throw new NotFoundException(`Invalid ID: ${id}`);
+    }
+
+    const updatedProduct = await this.productModel
       .findByIdAndUpdate(id, updateMarketItemDto, { new: true })
+      .exec();
+
+    if (!updatedProduct) {
+      throw new NotFoundException(`Product with ID ${id} not found`);
+    }
+
+    return updatedProduct;
+  }
+
+  async delete(id: string): Promise<void> {
+    if (!isValidObjectId(id)) {
+      throw new NotFoundException(`Invalid ID: ${id}`);
+    }
+
+    const result = await this.productModel.findByIdAndDelete(id).exec();
+
+    if (!result) {
+      throw new NotFoundException(`Product with ID ${id} not found`);
+    }
+  }
+
+  async findByPriceRange(minPrice: number, maxPrice: number): Promise<Product[]> {
+    return await this.productModel
+      .find({
+        price: { $gte: minPrice, $lte: maxPrice },
+      })
+      .sort({ price: 1 })
       .exec();
   }
 
-  async delete(id: string): Promise<boolean> {
-    const result = await this.marketItemModel.findByIdAndDelete(id).exec();
-    return !!result;
+  async searchByText(search: string): Promise<Product[]> {
+    return await this.productModel
+      .find({
+        $or: [
+          { name: { $regex: search, $options: 'i' } },
+          { description: { $regex: search, $options: 'i' } },
+        ],
+      })
+      .exec();
   }
 }
