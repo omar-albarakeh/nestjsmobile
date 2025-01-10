@@ -2,7 +2,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 
 @Schema()
-export class MarketItem extends Document {
+export class Product extends Document {
   @Prop({ required: true })
   name: string;
 
@@ -10,13 +10,16 @@ export class MarketItem extends Document {
   price: number;
 
   @Prop({ required: true })
-  category: string;
+  type: string;
 
-  @Prop({ default: '' })
+  @Prop({ required: true })
   description: string;
 
-  @Prop({ default: '' })
-  imageUrl: string;
+  @Prop({ required: true })
+  imageUrl: string; 
+
+  @Prop({ required: true })
+  stockQuantity: number;
 }
 
-export const MarketItemSchema = SchemaFactory.createForClass(MarketItem);
+export const ProductSchema = SchemaFactory.createForClass(Product);
