@@ -3,7 +3,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { MarketItemController } from './market-item.controller';
 import { MarketItemService } from './market-item.service';
 import { MarketItemRepository } from './market-item.repository';
-import { MarketItem, MarketItemSchema } from './market-item.schema';
+import { MarketItem, MarketItemSchema } from './product.schema';
 
 @Module({
   imports: [

@@ -9,7 +9,7 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common';
 import { MarketItemService } from './market-item.service';
-import { MarketItem } from './market-item.schema';
+import { MarketItem } from './product.schema';
 
 @Controller('market')
 export class MarketItemController {
