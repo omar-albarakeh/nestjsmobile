@@ -43,4 +43,11 @@ export class CommunityController {
   async getPosts() {
     return this.communityService.getPosts();
   }
+
+  @Get('/comments/:postId')
+async getCommentsByPost(@Param('postId') postId: string) {
+  return this.communityService.getCommentsByPost(postId);
+}
+
+  
 }

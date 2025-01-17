@@ -27,35 +27,34 @@ export class CommunityRepository {
   const userObjectId = this.toObjectId(userId);
   const postObjectId = this.toObjectId(postId);
 
-  const post = await this.communityPostModel.findById(postObjectId);
-  if (!post) throw new NotFoundException('Post not found');
+  const post = await this.communityPostModel.findOneAndUpdate(
+    { _id: postObjectId, likes: { $ne: userObjectId } }, // Ensure user hasn't already liked
+    { $addToSet: { likes: userObjectId } }, // Add only if not already present
+    { new: true }
+  );
 
-  if (post.likes.some((like) => like.toString() === userObjectId.toString())) {
-    throw new BadRequestException('User already liked this post');
-  }
+  if (!post) throw new NotFoundException('Post not found or already liked');
 
-  // Convert to string before pushing
-  post.likes.push(userObjectId as any);
-  await post.save();
   return { likes: post.likes.map((id) => id.toString()) };
 }
 
 
+
   async unlikePost(userId: string, postId: string): Promise<{ likes: string[] }> {
-    const userObjectId = this.toObjectId(userId);
-    const postObjectId = this.toObjectId(postId);
+  const userObjectId = this.toObjectId(userId);
+  const postObjectId = this.toObjectId(postId);
 
-    const post = await this.communityPostModel.findById(postObjectId);
-    if (!post) throw new NotFoundException('Post not found');
+  const post = await this.communityPostModel.findOneAndUpdate(
+    { _id: postObjectId, likes: userObjectId }, // Ensure the user has liked the post
+    { $pull: { likes: userObjectId } }, // Remove the user's `userId` from `likes`
+    { new: true }
+  );
 
-    if (!post.likes.some((like) => like.toString() === userObjectId.toString())) {
-      throw new BadRequestException('User has not liked this post');
-    }
+  if (!post) throw new NotFoundException('Post not found or user has not liked it');
 
-    post.likes = post.likes.filter((like) => like.toString() !== userObjectId.toString());
-    await post.save();
-    return { likes: post.likes.map((id) => id.toString()) };
-  }
+  return { likes: post.likes.map((id) => id.toString()) };
+}
+
 
   async addComment(userId: string, postId: string, text: string): Promise<void> {
     const userObjectId = this.toObjectId(userId);
@@ -79,4 +78,25 @@ export class CommunityRepository {
       .populate('userId', 'name type') // Populate user details
       .exec();
   }
+
+  async getCommentsByPost(postId: string): Promise<any[]> {
+  const postObjectId = this.toObjectId(postId);
+
+  const post = await this.communityPostModel
+    .findById(postObjectId)
+    .populate('comments.userId', 'name'); // Populate only the name field of the user
+
+  if (!post) throw new NotFoundException('Post not found');
+
+  return post.comments.map((comment) => {
+    const user = comment.userId as unknown as PopulatedUser; // Explicitly type the populated userId
+    return {
+      userName: user.name,
+      text: comment.text,
+      createdAt: comment.createdAt,
+    };
+  });
+}
+
+
 }

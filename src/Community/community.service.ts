@@ -25,4 +25,9 @@ export class CommunityService {
   async getPosts() {
     return this.communityRepository.getPosts();
   }
+
+  async getCommentsByPost(postId: string) {
+  return this.communityRepository.getCommentsByPost(postId);
+}
+
 }
