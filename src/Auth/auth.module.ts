@@ -12,7 +12,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import { UserRepository } from './repositories/user.repository';
 import { CommunityRepository } from '../Community/CommunityRepository';
 import { User, UserSchema } from './schemas/user.schema';
-import { CommunityPost, CommunityPostSchema } from '../Community/Schemas/Communit.posts';
+import { CommunityPost, CommunityPostSchema } from '../Community/Schemas/Community.posts';
 
 @Module({
   imports: [

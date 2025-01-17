@@ -2,7 +2,7 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { User } from '../Auth/schemas/user.schema';
-import { CommunityPost } from './Schemas/Communit.posts';
+import { CommunityPost } from './Schemas/Community.posts';
 
 @Injectable()
 export class CommunityRepository {
