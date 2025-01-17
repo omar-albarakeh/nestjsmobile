@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 import { SolarInfo, SolarInfoSchema } from '../../SolarInfo/Solar.Schema';
-import { CommunityPost, CommunityPostSchema } from '../../Community/Schemas/Community.Schema';
+import { CommunityPost } from '../../Community/Schemas/Communit.posts';
 
 @Schema()
 export class User extends Document {
@@ -15,7 +15,7 @@ export class User extends Document {
   password: string;
 
   @Prop({ required: true })
-  type: string; 
+  type: string;
 
   @Prop({ required: true })
   phone: string;
@@ -29,10 +29,10 @@ export class User extends Document {
   @Prop({ type: SolarInfoSchema, required: false })
   solarInfo?: SolarInfo;
 
-  @Prop({ type: [CommunityPostSchema], default: [] })
-  communityPosts: CommunityPost[];
+  @Prop({ type: [{ type: String, ref: 'CommunityPost' }], default: [] })
+  communityPosts: string[]; // Reference to CommunityPost IDs
 
-  @Prop({ type: String, ref: 'Cart' }) // Add reference to Cart
+  @Prop({ type: String, ref: 'Cart' })
   cart: string;
 }
 

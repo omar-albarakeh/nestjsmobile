@@ -5,10 +5,14 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigService } from '@nestjs/config';
 
 import { AuthController } from './auth.controller';
-import { AuthService } from './auth.service'; // Ensure AuthService is exported
+import { CommunityController } from '../Community/community.controller';
+import { AuthService } from './auth.service';
+import { CommunityService } from '../Community/community.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { UserRepository } from './repositories/user.repository';
+import { CommunityRepository } from '../Community/CommunityRepository';
 import { User, UserSchema } from './schemas/user.schema';
+import { CommunityPost, CommunityPostSchema } from '../Community/Schemas/Communit.posts';
 
 @Module({
   imports: [
@@ -20,10 +24,13 @@ import { User, UserSchema } from './schemas/user.schema';
         signOptions: { expiresIn: configService.get<string>('JWT_EXPIRES') || '1h' },
       }),
     }),
-    MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
+    MongooseModule.forFeature([
+      { name: User.name, schema: UserSchema },
+      { name: CommunityPost.name, schema: CommunityPostSchema },
+    ]),
   ],
-  controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, UserRepository],
-  exports: [AuthService, JwtModule, PassportModule, UserRepository], // Export AuthService and JwtModule
+  controllers: [AuthController, CommunityController],
+  providers: [AuthService, CommunityService, JwtStrategy, UserRepository, CommunityRepository],
+  exports: [AuthService, JwtModule, PassportModule, UserRepository, CommunityRepository],
 })
 export class AuthModule {}
