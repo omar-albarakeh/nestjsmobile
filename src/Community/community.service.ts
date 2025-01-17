@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { CommunityRepository } from './CommunityRepository';
 
 @Injectable()
@@ -6,6 +6,9 @@ export class CommunityService {
   constructor(private readonly communityRepository: CommunityRepository) {}
 
   async createPost(userId: string, text: string) {
+    if (!text.trim()) {
+      throw new BadRequestException('Text cannot be empty');
+    }
     return this.communityRepository.createPost(userId, text);
   }
 
@@ -18,6 +21,9 @@ export class CommunityService {
   }
 
   async addComment(userId: string, postId: string, text: string) {
+    if (!text.trim()) {
+      throw new BadRequestException('Comment cannot be empty');
+    }
     await this.communityRepository.addComment(userId, postId, text);
     return { message: 'Comment added successfully' };
   }
@@ -27,7 +33,6 @@ export class CommunityService {
   }
 
   async getCommentsByPost(postId: string) {
-  return this.communityRepository.getCommentsByPost(postId);
-}
-
+    return this.communityRepository.getCommentsByPost(postId);
+  }
 }
