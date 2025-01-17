@@ -6,8 +6,7 @@ import {
   Param,
   UseGuards,
   Req,
-  NotFoundException,
-  BadRequestException,
+  Query,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { CommunityService } from './community.service';
@@ -19,35 +18,41 @@ import { AddCommentDto } from './Dto/addComment';
 export class CommunityController {
   constructor(private readonly communityService: CommunityService) {}
 
-  @Post('/post')
+  @Post('/posts')
   async createPost(@Req() req, @Body() createPostDto: CreatePostDto) {
-    return this.communityService.createPost(req.user.id, createPostDto.text);
+    const post = await this.communityService.createPost(req.user.id, createPostDto.text);
+    return { success: true, message: 'Post created successfully', post };
   }
 
-  @Post('/like/:postId')
+  @Post('/posts/:postId/like')
   async likePost(@Req() req, @Param('postId') postId: string) {
     return this.communityService.likePost(req.user.id, postId);
   }
 
-  @Post('/unlike/:postId')
+  @Post('/posts/:postId/unlike')
   async unlikePost(@Req() req, @Param('postId') postId: string) {
     return this.communityService.unlikePost(req.user.id, postId);
   }
 
-  @Post('/comment/:postId')
-  async addComment(@Req() req, @Param('postId') postId: string, @Body() addCommentDto: AddCommentDto) {
-    return this.communityService.addComment(req.user.id, postId, addCommentDto.text);
+  @Post('/posts/:postId/comments')
+  async addComment(
+    @Req() req,
+    @Param('postId') postId: string,
+    @Body() addCommentDto: AddCommentDto,
+  ) {
+    const comment = await this.communityService.addComment(req.user.id, postId, addCommentDto.text);
+    return { success: true, message: 'Comment added successfully', comment };
   }
 
   @Get('/posts')
-  async getPosts() {
-    return this.communityService.getPosts();
-  }
-
-  @Get('/comments/:postId')
-async getCommentsByPost(@Param('postId') postId: string) {
-  return this.communityService.getCommentsByPost(postId);
+async getPosts(@Query('page') page = 1, @Query('limit') limit = 10) {
+  return this.communityService.getPosts({ page: +page, limit: +limit });
 }
 
-  
+
+
+  @Get('/posts/:postId/comments')
+  async getCommentsByPost(@Param('postId') postId: string) {
+    return this.communityService.getCommentsByPost(postId);
+  }
 }

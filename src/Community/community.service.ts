@@ -28,9 +28,10 @@ export class CommunityService {
     return { message: 'Comment added successfully' };
   }
 
-  async getPosts() {
-    return this.communityRepository.getPosts();
-  }
+  async getPosts(pagination?: { page: number; limit: number }) {
+  return this.communityRepository.getPosts(pagination);
+}
+
 
   async getCommentsByPost(postId: string) {
     return this.communityRepository.getCommentsByPost(postId);
