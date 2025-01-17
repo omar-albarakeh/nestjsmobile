@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
-import {SolarInfo, SolarInfoSchema } from '../../SolarInfo/Solar.Schema';
+import { SolarInfo, SolarInfoSchema } from '../../SolarInfo/Solar.Schema';
 import { CommunityPost, CommunityPostSchema } from '../../Community/Schemas/Community.Schema';
 
 @Schema()
@@ -30,7 +30,10 @@ export class User extends Document {
   solarInfo?: SolarInfo;
 
   @Prop({ type: [CommunityPostSchema], default: [] })
-  communityPosts: CommunityPost[]; 
+  communityPosts: CommunityPost[];
+
+  @Prop({ type: String, ref: 'Cart' }) // Add reference to Cart
+  cart: string;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
