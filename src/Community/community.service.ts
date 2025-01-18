@@ -13,12 +13,14 @@ export class CommunityService {
   }
 
   async likePost(userId: string, postId: string) {
-    return this.communityRepository.likePost(userId, postId);
-  }
+  return this.communityRepository.likePost(userId, postId);
+}
+
 
   async unlikePost(userId: string, postId: string) {
-    return this.communityRepository.unlikePost(userId, postId);
-  }
+  return this.communityRepository.unlikePost(userId, postId);
+}
+
 
   async addComment(userId: string, postId: string, text: string) {
     if (!text.trim()) {

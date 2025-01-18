@@ -37,6 +37,11 @@ export class User extends Document {
 
   @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Cart', required: false })
   cart?: Types.ObjectId;
+
+   @Prop({ default: false })
+  blocked: boolean;
+
 }
+
 
 export const UserSchema = SchemaFactory.createForClass(User);

@@ -57,8 +57,36 @@ export class UserRepository {
       .exec();
   }
 
-  async findAllUsers(): Promise<User[]> {
-  return await this.userModel.find().select('name email phone').exec();
+ async findAllUsers(): Promise<User[]> {
+  return await this.userModel.find().select('name email phone blocked').exec();
+}
+
+async blockUser(userId: string): Promise<User> {
+  const user = await this.userModel.findById(userId).select('name email blocked');
+
+  if (!user) {
+    throw new Error('User not found');
+  }
+  if (user.blocked) {
+    throw new Error('User is already blocked');
+  }
+
+  user.blocked = true;
+  return await user.save();
+}
+
+async unblockUser(userId: string): Promise<User> {
+  const user = await this.userModel.findById(userId).select('name email blocked');
+
+  if (!user) {
+    throw new Error('User not found');
+  }
+  if (!user.blocked) {
+    throw new Error('User is already unblocked');
+  }
+
+  user.blocked = false;
+  return await user.save();
 }
 
 }

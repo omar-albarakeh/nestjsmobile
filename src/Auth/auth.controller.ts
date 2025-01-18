@@ -10,6 +10,7 @@ import {
   Res,
   Req,
   UseGuards,
+  Param,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Response, Request } from 'express';
@@ -174,4 +175,46 @@ export class AuthController {
     }
     return this.authService.fetchCurrentUser(token); 
   }
+
+   @Post('/block/:userId')
+  @UseGuards(AuthGuard('jwt')) 
+  async blockUser(@Param('userId') userId: string): Promise<{ status: string; message: string }> {
+    try {
+      const user = await this.authService.blockUser(userId);
+      return {
+        status: 'success',
+        message: `User ${user.name} successfully blocked.`,
+      };
+    } catch (error) {
+      throw new InternalServerErrorException('Failed to block user', error.message);
+    }
+  }
+
+  @Post('/unblock/:userId')
+  @UseGuards(AuthGuard('jwt')) 
+  async unblockUser(@Param('userId') userId: string): Promise<{ status: string; message: string }> {
+    try {
+      const user = await this.authService.unblockUser(userId);
+      return {
+        status: 'success',
+        message: `User ${user.name} successfully unblocked.`,
+      };
+    } catch (error) {
+      throw new InternalServerErrorException('Failed to unblock user', error.message);
+    }
+  }
+  @Get('/users')
+  @HttpCode(HttpStatus.OK) 
+  async getAllUsers() {
+    try {
+      const users = await this.authService.getAllUsers();
+      return {
+        status: 'success',
+        data: users,
+      };
+    } catch (error) {
+      throw new InternalServerErrorException('Failed to fetch users');
+    }
+  }
+
 }

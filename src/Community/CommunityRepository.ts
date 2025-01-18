@@ -17,25 +17,33 @@ export class CommunityRepository {
     return this.communityPostModel.create({ userId, text });
   }
 
-  async likePost(userId: string, postId: string): Promise<{ likes: string[] }> {
-    const post = await this.communityPostModel.findOneAndUpdate(
-      { _id: postId, likes: { $ne: userId } },
-      { $addToSet: { likes: userId } },
-      { new: true }
-    );
-    if (!post) throw new NotFoundException('Post not found or already liked');
-    return { likes: post.likes.map((id) => id.toString()) };
-  }
+  async likePost(userId: string, postId: string): Promise<{ likesCount: number; likedByUser: boolean }> {
+  const post = await this.communityPostModel.findOneAndUpdate(
+    { _id: postId, likes: { $ne: userId } },
+    { $addToSet: { likes: userId } },
+    { new: true }
+  );
+  if (!post) throw new NotFoundException('Post not found or already liked');
+  return {
+    likesCount: post.likes.length,
+    likedByUser: true,
+  };
+}
 
-  async unlikePost(userId: string, postId: string): Promise<{ likes: string[] }> {
-    const post = await this.communityPostModel.findOneAndUpdate(
-      { _id: postId, likes: userId },
-      { $pull: { likes: userId } },
-      { new: true }
-    );
-    if (!post) throw new NotFoundException('Post not found or user has not liked it');
-    return { likes: post.likes.map((id) => id.toString()) };
-  }
+
+  async unlikePost(userId: string, postId: string): Promise<{ likesCount: number; likedByUser: boolean }> {
+  const post = await this.communityPostModel.findOneAndUpdate(
+    { _id: postId, likes: userId },
+    { $pull: { likes: userId } },
+    { new: true }
+  );
+  if (!post) throw new NotFoundException('Post not found or user has not liked it');
+  return {
+    likesCount: post.likes.length,
+    likedByUser: false,
+  };
+}
+
 
  async getPosts(pagination?: { page: number; limit: number }): Promise<CommunityPost[]> {
   const { page = 1, limit = 10 } = pagination || {};

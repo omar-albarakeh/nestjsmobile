@@ -208,4 +208,40 @@ export class AuthService {
       throw new UnauthorizedException('Invalid or expired token.');
     }
   }
+
+   async getAllUsers(): Promise<any[]> {
+  try {
+    const users = await this.userRepository.findAllUsers();
+    return users.map(user => ({
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      phone: user.phone,
+      blocked: user.blocked, 
+    }));
+  } catch (error) {
+    throw new InternalServerErrorException('Failed to fetch users');
+  }
+}
+
+
+
+ async blockUser(userId: string): Promise<User> {
+  try {
+    return await this.userRepository.blockUser(userId);
+  } catch (error) {
+    throw new InternalServerErrorException(error.message);
+  }
+}
+
+async unblockUser(userId: string): Promise<User> {
+  try {
+    return await this.userRepository.unblockUser(userId);
+  } catch (error) {
+    throw new InternalServerErrorException(error.message);
+  }
+}
+
+
+
 }

@@ -25,14 +25,18 @@ export class CommunityController {
   }
 
   @Post('/posts/:postId/like')
-  async likePost(@Req() req, @Param('postId') postId: string) {
-    return this.communityService.likePost(req.user.id, postId);
-  }
+async likePost(@Req() req, @Param('postId') postId: string) {
+  const response = await this.communityService.likePost(req.user.id, postId);
+  return { success: true, message: 'Post liked successfully', ...response };
+}
+
 
   @Post('/posts/:postId/unlike')
-  async unlikePost(@Req() req, @Param('postId') postId: string) {
-    return this.communityService.unlikePost(req.user.id, postId);
-  }
+async unlikePost(@Req() req, @Param('postId') postId: string) {
+  const response = await this.communityService.unlikePost(req.user.id, postId);
+  return { success: true, message: 'Post unliked successfully', ...response };
+}
+
 
   @Post('/posts/:postId/comments')
   async addComment(
@@ -45,9 +49,10 @@ export class CommunityController {
   }
 
   @Get('/posts')
-async getPosts(@Query('page') page = 1, @Query('limit') limit = 10) {
+async getPosts(@Query('page') page = 1, @Query('limit') limit = 1000) {
   return this.communityService.getPosts({ page: +page, limit: +limit });
 }
+
 
 
 

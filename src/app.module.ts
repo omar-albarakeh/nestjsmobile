@@ -2,10 +2,10 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AuthModule } from './auth/auth.module';
-import { ChatModule } from './chat/chat.module';
-import { ItemsModule } from './market-api/items/items.module'; // Import the ItemsModule
+import { ItemsModule } from './market-api/items/items.module';
 import { envValidationSchema } from './config/env.validation';
-import { CartModule } from './market-api/cart/cartmodule'; 
+import { CartModule } from './market-api/cart/cartmodule';
+import { MessagesModule } from './chatapp/messages.module'; // Import the MessagesModule
 
 @Module({
   imports: [
@@ -28,9 +28,9 @@ import { CartModule } from './market-api/cart/cartmodule';
 
     // Feature modules
     AuthModule, // Authentication module
-    ChatModule, // Chat module (WebSocket support)
     ItemsModule, // Items module (market functionality)
-    CartModule,
+    CartModule, // Cart module
+    MessagesModule, // Messages module (chat functionality)
   ],
 })
 export class AppModule {}
