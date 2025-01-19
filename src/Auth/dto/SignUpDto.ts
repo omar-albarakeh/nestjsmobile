@@ -1,4 +1,4 @@
-import { IsEmail, IsNotEmpty, IsString, MinLength, Matches } from 'class-validator';
+import { IsNotEmpty, IsEmail, IsString, MinLength, Matches } from 'class-validator';
 import { UserType } from '../user-type.enum';
 
 export class SignUpDto {
@@ -20,9 +20,6 @@ export class SignUpDto {
   readonly password: string;
 
   @IsNotEmpty({ message: 'User type is required' })
-  @Matches(/^(admin|user|engineer)$/i, {
-    message: 'Type must be either admin, user, or engineer',
-  })
   readonly type: UserType;
 
   @IsNotEmpty({ message: 'Phone is required' })
