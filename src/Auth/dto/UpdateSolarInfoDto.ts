@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsNumber } from 'class-validator';
+import { IsString, IsOptional, IsNumber, IsDateString } from 'class-validator';
 
 export class UpdateSolarInfoDto {
   @IsOptional()
@@ -22,6 +22,6 @@ export class UpdateSolarInfoDto {
   readonly inverterCapacity?: number;
 
   @IsOptional()
-  @IsString()
+  @IsDateString()
   readonly installationDate?: string;
 }
