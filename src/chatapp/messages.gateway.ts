@@ -1,4 +1,3 @@
-// src/messages/gateways/messages.gateway.ts
 import {
   WebSocketGateway,
   WebSocketServer,
@@ -11,75 +10,119 @@ import { MessageService } from './message.service';
 import { JwtService } from '@nestjs/jwt';
 import { Logger } from '@nestjs/common';
 
-@WebSocketGateway({ cors: true })
+@WebSocketGateway({ cors: { origin: '*' } })
 export class MessagesGateway {
-  @WebSocketServer()
-  server: Server;
-
-  private logger: Logger = new Logger('MessagesGateway');
+  @WebSocketServer() server: Server;
+  private logger = new Logger('MessagesGateway');
 
   constructor(
     private readonly messageService: MessageService,
     private readonly jwtService: JwtService,
   ) {}
 
-  // Handle WebSocket connection
+  
   async handleConnection(client: Socket) {
-    const token = client.handshake.auth.token;
+    const token =
+      client.handshake.query.token || client.handshake.headers['authorization'];
+
     if (!token) {
       this.logger.error('No token provided');
+      client.emit('error', { message: 'Authentication token is missing' });
       client.disconnect();
       return;
     }
 
     try {
-      // Verify the JWT token
-      const payload = this.jwtService.verify(token, { secret: process.env.JWT_SECRET });
-      client.handshake.auth.userId = payload.id; // Attach userId to the socket
-      this.logger.log(`Client connected: ${client.id}, User ID: ${payload.id}`);
+
+      const jwtToken = (Array.isArray(token) ? token[0] : token).replace(
+        'Bearer ',
+        '',
+      );
+
+      
+      const payload = this.jwtService.verify(jwtToken, {
+        secret: process.env.JWT_SECRET,
+      });
+
+ 
+      client.handshake.auth.userId = payload.id;
+      this.logger.log(
+        `Client connected: ${client.id}, User ID: ${payload.id}`,
+      );
+
+
+      client.emit('connected', { status: 'success', userId: payload.id });
+
+
+      client.join(payload.id);
+      this.logger.log(`User ${payload.id} joined room: ${payload.id}`);
     } catch (error) {
       this.logger.error('Invalid token', error.message);
-      client.disconnect(); // Disconnect if token is invalid
+      client.emit('error', { message: 'Invalid or expired token' });
+      client.disconnect();
     }
   }
 
-  // Handle WebSocket disconnection
+ 
   handleDisconnect(client: Socket) {
     this.logger.log(`Client disconnected: ${client.id}`);
   }
 
-  // Handle sending messages
   @SubscribeMessage('sendMessage')
   async handleMessage(
     @MessageBody() data: { receiverId: string; content: string },
     @ConnectedSocket() client: Socket,
   ) {
     const senderId = client.handshake.auth.userId;
+
     if (!senderId) {
       this.logger.error('Sender ID not found');
+      client.emit('error', { message: 'Unauthorized access' });
       return;
     }
 
     try {
-      // Save the message to the database
+      this.logger.log(`Sending message from User ID: ${senderId} to User ID: ${data.receiverId} with content: "${data.content}"`);
+
+
       const message = await this.messageService.sendMessage(
         senderId,
         data.receiverId,
         data.content,
       );
 
-      // Emit the message to the receiver
       this.server.to(data.receiverId).emit('receiveMessage', message);
-      this.logger.log(`Message sent from ${senderId} to ${data.receiverId}`);
+
+
+      client.emit('messageSent', { status: 'success', message });
     } catch (error) {
       this.logger.error('Error sending message', error.message);
+      client.emit('error', { message: 'Failed to send the message' });
     }
   }
 
-  // Handle joining a chat room
   @SubscribeMessage('joinChat')
-  handleJoinChat(@MessageBody() userId: string, @ConnectedSocket() client: Socket) {
+  handleJoinChat(
+    @MessageBody() userId: string,
+    @ConnectedSocket() client: Socket,
+  ) {
     client.join(userId);
-    this.logger.log(`User ${userId} joined the chat`);
+    this.logger.log(`User ${userId} joined the chat room`);
+
+
+    client.emit('joinedChat', { status: 'success', roomId: userId });
+  }
+
+
+  @SubscribeMessage('leaveChat')
+  handleLeaveChat(
+    @MessageBody() userId: string,
+    @ConnectedSocket() client: Socket,
+  ) {
+    client.leave(userId);
+    this.logger.log(`User ${userId} left the chat room`);
+
+
+    client.emit('leftChat', { status: 'success', roomId: userId });
   }
 }
