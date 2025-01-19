@@ -19,26 +19,24 @@ import { SendMessageWsDto } from './message.dto';
 export class MessageController {
   constructor(private readonly messageService: MessageService) {}
 
- @Post('/send')
-async sendMessage(@Req() req: Request, @Body() sendMessageDto: SendMessageWsDto) {
-  const senderId = req.user['id'];
+  @Post('/send')
+  async sendMessage(@Req() req: Request, @Body() sendMessageDto: SendMessageWsDto) {
+    const senderId = req.user['id'];
 
-  try {
-    const message = await this.messageService.sendMessage(
-      senderId,
-      sendMessageDto.receiverId,
-      sendMessageDto.content,
-    );
-    return { status: 'success', message };
-  } catch (error) {
-    if (error.name === 'ValidationError') {
-      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+    try {
+      const message = await this.messageService.sendMessage(
+        senderId,
+        sendMessageDto.receiverId,
+        sendMessageDto.content,
+      );
+      return { status: 'success', message };
+    } catch (error) {
+      if (error.name === 'ValidationError') {
+        throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+      }
+      throw new HttpException('Internal server error', HttpStatus.INTERNAL_SERVER_ERROR);
     }
-    throw new HttpException('Internal server error', HttpStatus.INTERNAL_SERVER_ERROR);
   }
-}
-
-
 
   @Get('/chat/:userId')
   async getChatHistory(@Req() req: Request, @Param('userId') userId: string) {
@@ -60,4 +58,5 @@ async sendMessage(@Req() req: Request, @Body() sendMessageDto: SendMessageWsDto)
       throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
+
 }

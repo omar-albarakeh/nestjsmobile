@@ -36,7 +36,6 @@ export class ItemsController {
         return this.itemsService.delete(id);
     }
 
-    // New endpoint to get items by category
     @Get('category/:category')
     async findByCategory(
         @Param('category') category: string,

@@ -11,6 +11,8 @@ import {
   Req,
   UseGuards,
   Param,
+  NotFoundException,
+  ConflictException,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Response, Request } from 'express';
@@ -18,6 +20,7 @@ import { AuthService } from './auth.service';
 import { SignUpDto } from './dto/SignUpDto';
 import { LoginDto } from './dto/LoginDto';
 import { UpdateSolarInfoDto } from './dto/UpdateSolarInfoDto';
+import { User } from './schemas/user.schema'; // Adjust the path as necessary
 
 @Controller('auth')
 export class AuthController {
@@ -176,33 +179,42 @@ export class AuthController {
     return this.authService.fetchCurrentUser(token); 
   }
 
-   @Post('/block/:userId')
-  @UseGuards(AuthGuard('jwt')) 
-  async blockUser(@Param('userId') userId: string): Promise<{ status: string; message: string }> {
-    try {
-      const user = await this.authService.blockUser(userId);
-      return {
-        status: 'success',
-        message: `User ${user.name} successfully blocked.`,
-      };
-    } catch (error) {
-      throw new InternalServerErrorException('Failed to block user', error.message);
+@Post('/block/:userId')
+@UseGuards(AuthGuard('jwt'))
+async blockUser(@Param('userId') userId: string): Promise<{ status: string; message: string; user: User }> {
+  try {
+    const user = await this.authService.blockUser(userId);
+    return {
+      status: 'success',
+      message: `User ${user.name} has been successfully blocked.`,
+      user,
+    };
+  } catch (error) {
+    if (error instanceof NotFoundException || error instanceof ConflictException) {
+      throw error;
     }
+    throw new InternalServerErrorException('Failed to block user.', error.message);
   }
+}
 
-  @Post('/unblock/:userId')
-  @UseGuards(AuthGuard('jwt')) 
-  async unblockUser(@Param('userId') userId: string): Promise<{ status: string; message: string }> {
-    try {
-      const user = await this.authService.unblockUser(userId);
-      return {
-        status: 'success',
-        message: `User ${user.name} successfully unblocked.`,
-      };
-    } catch (error) {
-      throw new InternalServerErrorException('Failed to unblock user', error.message);
+@Post('/unblock/:userId')
+@UseGuards(AuthGuard('jwt'))
+async unblockUser(@Param('userId') userId: string): Promise<{ status: string; message: string; user: User }> {
+  try {
+    const user = await this.authService.unblockUser(userId);
+    return {
+      status: 'success',
+      message: `User ${user.name} has been successfully unblocked.`,
+      user,
+    };
+  } catch (error) {
+    if (error instanceof NotFoundException || error instanceof ConflictException) {
+      throw error;
     }
+    throw new InternalServerErrorException('Failed to unblock user.', error.message);
   }
+}
+
   @Get('/users')
   @HttpCode(HttpStatus.OK) 
   async getAllUsers() {
