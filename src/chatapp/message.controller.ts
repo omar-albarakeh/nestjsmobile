@@ -12,25 +12,32 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { MessageService } from './message.service';
 import { Request } from 'express';
-import { SendMessageDto } from './message.dto';
+import { SendMessageWsDto } from './message.dto';
 
 @Controller('messages')
 @UseGuards(AuthGuard('jwt'))
 export class MessageController {
   constructor(private readonly messageService: MessageService) {}
 
-  @Post('/send')
-async sendMessage(@Req() req: Request, @Body() sendMessageDto: SendMessageDto) {
+ @Post('/send')
+async sendMessage(@Req() req: Request, @Body() sendMessageDto: SendMessageWsDto) {
   const senderId = req.user['id'];
+
   try {
-    return await this.messageService.sendMessage(senderId, sendMessageDto.receiverId, sendMessageDto.content);
+    const message = await this.messageService.sendMessage(
+      senderId,
+      sendMessageDto.receiverId,
+      sendMessageDto.content,
+    );
+    return { status: 'success', message };
   } catch (error) {
     if (error.name === 'ValidationError') {
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
-    throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
+    throw new HttpException('Internal server error', HttpStatus.INTERNAL_SERVER_ERROR);
   }
 }
+
 
 
   @Get('/chat/:userId')
