@@ -5,7 +5,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { UserRepository } from './repositories/user.repository';
+import { UserRepository } from './user.repository';
 import { JwtService } from '@nestjs/jwt';
 import { SignUpDto } from './dto/SignUpDto';
 import { LoginDto } from './dto/LoginDto';

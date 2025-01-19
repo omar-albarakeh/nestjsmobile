@@ -9,7 +9,7 @@ import { CommunityController } from '../Community/community.controller';
 import { AuthService } from './auth.service';
 import { CommunityService } from '../Community/community.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
-import { UserRepository } from './repositories/user.repository';
+import { UserRepository } from './user.repository';
 import { CommunityRepository } from '../Community/CommunityRepository';
 import { User, UserSchema } from './schemas/user.schema';
 import { CommunityPost, CommunityPostSchema } from '../Community/Schemas/Community.posts';
