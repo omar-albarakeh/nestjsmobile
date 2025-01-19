@@ -2,9 +2,9 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Strategy, ExtractJwt } from 'passport-jwt';
-import { User } from '../schemas/user.schema';
 import { PassportStrategy } from '@nestjs/passport';
 import { ConfigService } from '@nestjs/config';
+import { User } from '../schemas/user.schema';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -15,14 +15,21 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       secretOrKey: configService.get<string>('JWT_SECRET'),
+      ignoreExpiration: false,
     });
   }
-
   async validate(payload: { id: string }) {
-    const user = await this.userModel.findById(payload.id);
+    const user = await this.userModel.findById(payload.id).exec();
 
     if (!user) {
-      throw new UnauthorizedException('Login first to access this endpoint.');
+      throw new UnauthorizedException(
+        'Unauthorized: Please log in to access this endpoint.',
+      );
+    }
+    if (user.blocked) {
+      throw new UnauthorizedException(
+        'Unauthorized: Your account has been blocked.',
+      );
     }
 
     return user;

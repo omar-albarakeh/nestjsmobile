@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Schema as MongooseSchema, Types } from 'mongoose';
-import { SolarInfo, SolarInfoSchema } from '../../SolarInfo/Solar.Schema';
+import { SolarInfo, SolarInfoSchema } from './Solar.Schema';
 import { UserType } from '../user-type.enum';
 
 @Schema()
