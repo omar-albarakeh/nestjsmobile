@@ -3,9 +3,8 @@ import {
   UnauthorizedException,
   ConflictException,
   InternalServerErrorException,
-  NotFoundException,
 } from '@nestjs/common';
-import { UserRepository } from './user.repository';
+import { UserRepository } from './repositories/user.repository';
 import { JwtService } from '@nestjs/jwt';
 import { SignUpDto } from './dto/SignUpDto';
 import { LoginDto } from './dto/LoginDto';
@@ -226,20 +225,23 @@ export class AuthService {
 }
 
 
-async blockUser(userId: string): Promise<User> {
-  const user = await this.userRepository.blockUser(userId);
-  if (!user) {
-    throw new NotFoundException('User not found.');
+
+ async blockUser(userId: string): Promise<User> {
+  try {
+    return await this.userRepository.blockUser(userId);
+  } catch (error) {
+    throw new InternalServerErrorException(error.message);
   }
-  return user;
 }
 
 async unblockUser(userId: string): Promise<User> {
-  const user = await this.userRepository.unblockUser(userId);
-  if (!user) {
-    throw new NotFoundException('User not found.');
+  try {
+    return await this.userRepository.unblockUser(userId);
+  } catch (error) {
+    throw new InternalServerErrorException(error.message);
   }
-  return user;
 }
+
+
 
 }

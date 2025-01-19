@@ -1,7 +1,7 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { User } from './schemas/user.schema';
+import { User } from '../schemas/user.schema';
 
 @Injectable()
 export class UserRepository {
@@ -61,26 +61,30 @@ export class UserRepository {
   return await this.userModel.find().select('name email phone blocked').exec();
 }
 
-async blockUser(userId: string): Promise<User | null> {
-  const user = await this.userModel.findById(userId).exec();
+async blockUser(userId: string): Promise<User> {
+  const user = await this.userModel.findById(userId).select('name email blocked');
+
   if (!user) {
-    throw new NotFoundException('User not found.');
+    throw new Error('User not found');
   }
   if (user.blocked) {
-    throw new ConflictException('User is already blocked.');
+    throw new Error('User is already blocked');
   }
+
   user.blocked = true;
   return await user.save();
 }
 
-async unblockUser(userId: string): Promise<User | null> {
-  const user = await this.userModel.findById(userId).exec();
+async unblockUser(userId: string): Promise<User> {
+  const user = await this.userModel.findById(userId).select('name email blocked');
+
   if (!user) {
-    throw new NotFoundException('User not found.');
+    throw new Error('User not found');
   }
   if (!user.blocked) {
-    throw new ConflictException('User is already unblocked.');
+    throw new Error('User is already unblocked');
   }
+
   user.blocked = false;
   return await user.save();
 }
