@@ -1,7 +1,7 @@
 import { Schema, Document } from 'mongoose';
 
 export const ItemSchema = new Schema({
-    _id: { type: String, required: true },
+    _id: { type: String, required: true }, // Custom _id field
     name: { type: String, required: true },
     price: { type: Number, required: true },
     capacity: { type: Number, required: true },

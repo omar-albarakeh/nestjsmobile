@@ -1,66 +1,38 @@
-// src/cart/cart.service.ts
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { Cart, CartItem } from './cart.schema';
-import { AddToCartDto } from './cartdto';
-import { RemoveFromCartDto } from './cartdto';
-import { User } from '../../Auth/schemas/user.schema';
+// import { Injectable, NotFoundException } from '@nestjs/common';
+// import { InjectModel } from '@nestjs/mongoose';
+// import { Model } from 'mongoose';
+// import { Cart } from './cart.schema';
+// import { Item } from '../items/item.schema';
 
-@Injectable()
-export class CartService {
-    constructor(
-        @InjectModel('Cart') private readonly cartModel: Model<Cart>,
-        @InjectModel('User') private readonly userModel: Model<User>,
-    ) {}
+// @Injectable()
+// export class CartService {
+//   constructor(
+//     @InjectModel(Cart.name) private readonly cartModel: Model<Cart>,
+//     @InjectModel('Item') private readonly itemModel: Model<Item>,
+//   ) {}
 
-    async getCart(userId: string): Promise<Cart> {
-        const cart = await this.cartModel.findOne({ userId }).populate('items.itemId').exec();
-        if (!cart) {
-            throw new NotFoundException('Cart not found');
-        }
-        return cart;
-    }
+//   async addItemToCart(userId: string, itemId: string, quantity: number = 1): Promise<Cart> {
+//     const item = await this.itemModel.findById(itemId).exec();
+//     if (!item) {
+//       throw new NotFoundException('Item not found');
+//     }
 
-    async addToCart(userId: string, addToCartDto: AddToCartDto): Promise<Cart> {
-    const { itemId, quantity } = addToCartDto;
+//     let cart = await this.cartModel.findOne({ user: userId }).exec();
+//     if (!cart) {
+//       cart = new this.cartModel({ user: userId, items: [] });
+//     }
 
-    let cart = await this.cartModel.findOne({ userId }).exec();
+//     cart.addItem(item._id, quantity);
+//     return cart.save();
+//   }
 
-    if (!cart) {
-        cart = new this.cartModel({ userId, items: [] });
-    }
+//   async removeItemFromCart(userId: string, itemId: string): Promise<Cart> {
+//     const cart = await this.cartModel.findOne({ user: userId }).exec();
+//     if (!cart) {
+//       throw new NotFoundException('Cart not found');
+//     }
 
-    const itemIndex = cart.items.findIndex((item) => item.itemId.toString() === itemId);
-
-    if (itemIndex > -1) {
-        cart.items[itemIndex].quantity += quantity;
-    } else {
-        const newItem: CartItem = {
-            itemId: itemId,
-            quantity: quantity,
-        } as CartItem;
-        cart.items.push(newItem);
-    }
-
-    return cart.save();
-}
-
-    async removeFromCart(userId: string, removeFromCartDto: RemoveFromCartDto): Promise<Cart> {
-        const { itemId } = removeFromCartDto;
-
-        const cart = await this.cartModel.findOne({ userId }).exec();
-
-        if (!cart) {
-            throw new NotFoundException('Cart not found');
-        }
-
-        cart.items = cart.items.filter((item) => item.itemId.toString() !== itemId);
-
-        return cart.save();
-    }
-
-    async clearCart(userId: string): Promise<void> {
-        await this.cartModel.findOneAndDelete({ userId }).exec();
-    }
-}
+//     cart.removeItem(itemId);
+//     return cart.save();
+//   }
+// }

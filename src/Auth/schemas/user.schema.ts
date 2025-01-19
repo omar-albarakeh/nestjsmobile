@@ -34,11 +34,13 @@ export class User extends Document {
   })
   communityPosts: Types.ObjectId[]; 
 
-  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Cart', required: false })
+   @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Cart', required: false })
   cart?: Types.ObjectId;
 
-  @Prop({ default: false })
+   @Prop({ default: false })
   blocked: boolean;
+
 }
+
 
 export const UserSchema = SchemaFactory.createForClass(User);
