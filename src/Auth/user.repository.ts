@@ -1,9 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  ConflictException,
-  BadRequestException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { User } from './schemas/user.schema';
@@ -13,15 +8,8 @@ export class UserRepository {
   constructor(@InjectModel(User.name) private readonly userModel: Model<User>) {}
 
   async createUser(userData: Partial<User>): Promise<User> {
-    try {
-      const user = new this.userModel(userData);
-      return await user.save();
-    } catch (error) {
-      if (error.code === 11000) {
-        throw new ConflictException('Email is already taken.');
-      }
-      throw new BadRequestException('Failed to create user.');
-    }
+    const user = new this.userModel(userData);
+    return await user.save();
   }
 
   async findUserByEmail(email: string): Promise<User | null> {
@@ -42,25 +30,26 @@ export class UserRepository {
   }
 
   async updateSolarInfo(
-    userId: string,
-    solarInfo: Partial<User['solarInfo']>,
-  ): Promise<User['solarInfo'] | null> {
-    const user = await this.userModel
-      .findByIdAndUpdate(
-        userId,
-        {
-          $set: {
-            solarInfo,
-            isSolarInfoComplete: true,
-          },
+  userId: string,
+  solarInfo: Partial<User['solarInfo']>,
+): Promise<User['solarInfo'] | null> {
+  const user = await this.userModel
+    .findByIdAndUpdate(
+      userId,
+      {
+        $set: {
+          solarInfo,
+          isSolarInfoComplete: true,
         },
-        { new: true },
-      )
-      .select('solarInfo')
-      .exec();
+      },
+      { new: true },
+    )
+    .select('solarInfo') 
+    .exec();
 
-    return user?.solarInfo || null;
-  }
+  return user?.solarInfo || null;
+}
+
 
   async updateUser(userId: string, updates: Partial<User>): Promise<User | null> {
     return await this.userModel
@@ -68,31 +57,32 @@ export class UserRepository {
       .exec();
   }
 
-  async findAllUsers(): Promise<User[]> {
-    return await this.userModel.find().select('name email phone blocked').exec();
-  }
+ async findAllUsers(): Promise<User[]> {
+  return await this.userModel.find().select('name email phone blocked').exec();
+}
 
-  async blockUser(userId: string): Promise<User | null> {
-    const user = await this.userModel.findById(userId).exec();
-    if (!user) {
-      throw new NotFoundException('User not found.');
-    }
-    if (user.blocked) {
-      throw new ConflictException('User is already blocked.');
-    }
-    user.blocked = true;
-    return await user.save();
+async blockUser(userId: string): Promise<User | null> {
+  const user = await this.userModel.findById(userId).exec();
+  if (!user) {
+    throw new NotFoundException('User not found.');
   }
+  if (user.blocked) {
+    throw new ConflictException('User is already blocked.');
+  }
+  user.blocked = true;
+  return await user.save();
+}
 
-  async unblockUser(userId: string): Promise<User | null> {
-    const user = await this.userModel.findById(userId).exec();
-    if (!user) {
-      throw new NotFoundException('User not found.');
-    }
-    if (!user.blocked) {
-      throw new ConflictException('User is already unblocked.');
-    }
-    user.blocked = false;
-    return await user.save();
+async unblockUser(userId: string): Promise<User | null> {
+  const user = await this.userModel.findById(userId).exec();
+  if (!user) {
+    throw new NotFoundException('User not found.');
   }
+  if (!user.blocked) {
+    throw new ConflictException('User is already unblocked.');
+  }
+  user.blocked = false;
+  return await user.save();
+}
+
 }
