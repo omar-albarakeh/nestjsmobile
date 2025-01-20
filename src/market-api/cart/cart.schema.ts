@@ -1,16 +1,16 @@
+// src/cart/cart.schema.ts
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, Schema as MongooseSchema, Types } from 'mongoose';
-import { Item } from '../items/item.schema';
+import { Document } from 'mongoose';
 
-@Schema({ timestamps: true })
+@Schema()
 export class Cart extends Document {
-  @Prop({ type: [{ type: MongooseSchema.Types.ObjectId, ref: 'Item' }], default: [] })
-  items: Types.ObjectId[];
+  @Prop({ type: [{ type: String, ref: 'Item' }] }) // Use String instead of ObjectId
+  items: string[];
 
-  @Prop({ type: Map, of: Number, default: new Map<string, number>() })
+  @Prop({ type: Map, of: Number, default: {} })
   quantities: Map<string, number>;
 
-  @Prop({ type: Number, default: 0 })
+  @Prop({ default: 0 })
   totalPrice: number;
 }
 

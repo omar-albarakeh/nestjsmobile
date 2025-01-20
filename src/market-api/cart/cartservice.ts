@@ -23,27 +23,34 @@ export class CartService {
   }
 
 
-  async addItemToCart(userId: string, itemId: string, quantity: number): Promise<Cart> {
-    const user = await this.userModel.findById(userId).populate('cart');
-    if (!user || !user.cart) {
-      throw new NotFoundException('User or cart not found');
-    }
-
-    const item = await this.itemModel.findById(itemId);
-    if (!item) {
-      throw new NotFoundException('Item not found');
-    }
-
-    const cart = await this.cartModel.findById(user.cart);
-
-    cart.items.push(item._id as Types.ObjectId);
-    cart.quantities.set(item._id.toString(), quantity);
-    cart.totalPrice += item.price * quantity;
-
-    await cart.save();
-    return cart;
+ async addItemToCart(userId: string, itemId: string, quantity: number): Promise<Cart> {
+  const user = await this.userModel.findById(userId).populate('cart');
+  if (!user || !user.cart) {
+    throw new NotFoundException('User or cart not found');
   }
 
+  const item = await this.itemModel.findById(itemId);
+  if (!item) {
+    throw new NotFoundException('Item not found');
+  }
+
+  const cart = await this.cartModel.findById(user.cart);
+
+  const itemIndex = cart.items.findIndex((id) => id.toString() === itemId);
+
+  if (itemIndex > -1) {
+    const currentQuantity = cart.quantities.get(itemId) || 0;
+    cart.quantities.set(itemId, currentQuantity + quantity);
+  } else {
+    cart.items.push(itemId);
+    cart.quantities.set(itemId, quantity);
+  }
+
+  cart.totalPrice += item.price * quantity;
+
+  await cart.save();
+  return cart;
+}
   async removeItemFromCart(userId: string, itemId: string): Promise<Cart> {
     const user = await this.userModel.findById(userId).populate('cart');
     if (!user || !user.cart) {

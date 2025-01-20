@@ -1,21 +1,32 @@
-import { Schema, Document } from 'mongoose';
+// src/items/item.schema.ts
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Document } from 'mongoose';
 
-export const ItemSchema = new Schema({
-    name: { type: String, required: true },
-    price: { type: Number, required: true },
-    capacity: { type: Number, required: true },
-    category: { type: String, required: true },
-    description: { type: String, required: true },
-    imageUrl: { type: String, required: true },
-    quantity: { type: Number, required: true },
-});
+@Schema() // Use the @Schema decorator to define a Mongoose schema
+export class Item extends Document {
+  @Prop({ type: String, required: true }) // Explicitly define _id as a string
+  _id: string;
 
-export interface Item extends Document {
-    name: string;
-    price: number;
-    capacity: number;
-    category: string;
-    description: string;
-    imageUrl: string;
-    quantity: number;
+  @Prop({ required: true })
+  name: string;
+
+  @Prop({ required: true })
+  price: number;
+
+  @Prop({ required: true })
+  capacity: number;
+
+  @Prop({ required: true })
+  category: string;
+
+  @Prop({ required: true })
+  description: string;
+
+  @Prop({ required: true })
+  imageUrl: string;
+
+  @Prop({ required: true })
+  quantity: number;
 }
+
+export const ItemSchema = SchemaFactory.createForClass(Item); // Create the schema from the class

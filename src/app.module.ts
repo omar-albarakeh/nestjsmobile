@@ -4,6 +4,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { AuthModule } from './auth/auth.module';
 import { ItemsModule } from './market-api/items/items.module';
 import { envValidationSchema } from './config/env.validation';
+import { CartModule } from './market-api/cart/cartmodule';
 import { MessagesModule } from './chatapp/messages.module';
 
 @Module({
@@ -27,6 +28,7 @@ import { MessagesModule } from './chatapp/messages.module';
 
     AuthModule, 
     ItemsModule,
+    CartModule, 
     MessagesModule,
   ],
 })
