@@ -1,10 +1,35 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
+import { ConfigModule } from '@nestjs/config';
+import { MongooseModule } from '@nestjs/mongoose';
+import { AuthModule } from './auth/auth.module';
+import { ItemsModule } from './market-api/items/items.module';
+import { envValidationSchema } from './config/env.validation';
+import { CartModule } from './market-api/cart/cartmodule';
+import { MessagesModule } from './chatapp/messages.module';
 
 @Module({
-  imports: [],
-  controllers: [AppController],
-  providers: [AppService],
+  imports: [
+   
+    ConfigModule.forRoot({
+      isGlobal: true, 
+      envFilePath: '.env', 
+      validationSchema: envValidationSchema, 
+      validationOptions: {
+        allowUnknown: true, 
+        abortEarly: false, 
+      },
+    }),
+
+ 
+    MongooseModule.forRoot(process.env.DB_URI, {
+      retryAttempts: 5,
+      retryDelay: 1000, 
+    }),
+
+    AuthModule, 
+    ItemsModule,
+    CartModule, 
+    MessagesModule,
+  ],
 })
 export class AppModule {}
