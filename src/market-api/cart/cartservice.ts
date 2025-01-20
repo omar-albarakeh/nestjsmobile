@@ -52,32 +52,29 @@ export class CartService {
   return cart;
 }
   async removeItemFromCart(userId: string, itemId: string): Promise<Cart> {
-    const user = await this.userModel.findById(userId).populate('cart');
-    if (!user || !user.cart) {
-      throw new NotFoundException('User or cart not found');
-    }
-
-    const cart = await this.cartModel.findById(user.cart);
-
-    const itemIndex = cart.items.findIndex(
-      (cartItemId) => cartItemId.toString() === itemId,
-    );
-
-    if (itemIndex > -1) {
-      const item = await this.itemModel.findById(itemId);
-      if (item) {
-
-        cart.totalPrice -= item.price * (cart.quantities.get(itemId) || 0);
-
-        cart.items.splice(itemIndex, 1);
-        cart.quantities.delete(itemId);
-      }
-    }
-
-    await cart.save();
-    return cart;
+  const user = await this.userModel.findById(userId).populate('cart');
+  if (!user || !user.cart) {
+    throw new NotFoundException('User or cart not found');
   }
 
+  const cart = await this.cartModel.findById(user.cart);
+
+  const itemIndex = cart.items.findIndex((id) => id.toString() === itemId);
+
+  if (itemIndex > -1) {
+    const item = await this.itemModel.findById(itemId);
+    if (item) {
+      cart.totalPrice -= item.price * (cart.quantities.get(itemId) || 0);
+    }
+    cart.items.splice(itemIndex, 1);
+    cart.quantities.delete(itemId);
+  } else {
+    throw new NotFoundException('Item not found in cart');
+  }
+
+  await cart.save();
+  return cart;
+}
 
   async getCart(userId: string): Promise<Cart> {
     const user = await this.userModel.findById(userId).populate('cart');
