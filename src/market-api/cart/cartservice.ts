@@ -14,82 +14,86 @@ export class CartService {
   ) {}
 
   async createCart(userId: string): Promise<Cart> {
-    const newCart = new this.cartModel();
-    await newCart.save();
+  const newCart = new this.cartModel({ userId }); 
+  await newCart.save();
 
-    await this.userModel.findByIdAndUpdate(userId, { cart: newCart._id });
+  await this.userModel.findByIdAndUpdate(userId, { cart: newCart._id });
 
-    return newCart;
-  }
-
-
- async addItemToCart(userId: string, itemId: string, quantity: number): Promise<Cart> {
-  const user = await this.userModel.findById(userId).populate('cart');
-  if (!user || !user.cart) {
-    throw new NotFoundException('User or cart not found');
-  }
-
-  const item = await this.itemModel.findById(itemId);
-  if (!item) {
-    throw new NotFoundException('Item not found');
-  }
-
-  const cart = await this.cartModel.findById(user.cart);
-
-  const itemIndex = cart.items.findIndex((id) => id.toString() === itemId);
-
-  if (itemIndex > -1) {
-    const currentQuantity = cart.quantities.get(itemId) || 0;
-    cart.quantities.set(itemId, currentQuantity + quantity);
-  } else {
-    cart.items.push(itemId);
-    cart.quantities.set(itemId, quantity);
-  }
-
-  cart.totalPrice += item.price * quantity;
-
-  await cart.save();
-  return cart;
+  return newCart;
 }
-  async removeItemFromCart(userId: string, itemId: string): Promise<Cart> {
-  const user = await this.userModel.findById(userId).populate('cart');
-  if (!user || !user.cart) {
-    throw new NotFoundException('User or cart not found');
-  }
 
-  const cart = await this.cartModel.findById(user.cart);
-
-  const itemIndex = cart.items.findIndex((id) => id.toString() === itemId);
-
-  if (itemIndex > -1) {
-    const item = await this.itemModel.findById(itemId);
-    if (item) {
-      cart.totalPrice -= item.price * (cart.quantities.get(itemId) || 0);
+  async addItemToCart(userId: string, itemId: string, quantity: number): Promise<Cart> {
+    if (quantity <= 0) {
+      throw new NotFoundException('Quantity must be greater than zero');
     }
-    cart.items.splice(itemIndex, 1);
-    cart.quantities.delete(itemId);
-  } else {
-    throw new NotFoundException('Item not found in cart');
+
+    const user = await this.userModel.findById(userId).populate('cart');
+    if (!user || !user.cart) {
+      throw new NotFoundException('User or cart not found');
+    }
+
+    const item = await this.itemModel.findById(itemId);
+    if (!item) {
+      throw new NotFoundException('Item not found');
+    }
+
+    const cart = await this.cartModel.findById(user.cart);
+
+    const itemIndex = cart.items.findIndex((id) => id.toString() === itemId);
+
+    if (itemIndex > -1) {
+      const currentQuantity = cart.quantities.get(itemId) || 0;
+      cart.quantities.set(itemId, currentQuantity + quantity);
+    } else {
+      cart.items.push(itemId);
+      cart.quantities.set(itemId, quantity);
+    }
+
+    cart.totalPrice += item.price * quantity;
+
+    await cart.save();
+    return cart;
   }
 
-  await cart.save();
-  return cart;
-}
+  async removeItemFromCart(userId: string, itemId: string): Promise<Cart> {
+    const user = await this.userModel.findById(userId).populate('cart');
+    if (!user || !user.cart) {
+      throw new NotFoundException('User or cart not found');
+    }
 
-async clearCart(userId: string): Promise<Cart> {
-  const user = await this.userModel.findById(userId).populate('cart');
-  if (!user || !user.cart) {
-    throw new NotFoundException('User or cart not found');
+    const cart = await this.cartModel.findById(user.cart);
+
+    const itemIndex = cart.items.findIndex((id) => id.toString() === itemId);
+
+    if (itemIndex > -1) {
+      const item = await this.itemModel.findById(itemId);
+      if (item) {
+        cart.totalPrice -= item.price * (cart.quantities.get(itemId) || 0);
+      }
+      cart.items.splice(itemIndex, 1);
+      cart.quantities.delete(itemId);
+    } else {
+      throw new NotFoundException('Item not found in cart');
+    }
+
+    await cart.save();
+    return cart;
   }
 
-  const cart = await this.cartModel.findById(user.cart);
-  cart.items = [];
-  cart.quantities = new Map<string, number>();
-  cart.totalPrice = 0;
+  async clearCart(userId: string): Promise<Cart> {
+    const user = await this.userModel.findById(userId).populate('cart');
+    if (!user || !user.cart) {
+      throw new NotFoundException('User or cart not found');
+    }
 
-  await cart.save();
-  return cart;
-}
+    const cart = await this.cartModel.findById(user.cart);
+    cart.items = [];
+    cart.quantities = new Map<string, number>();
+    cart.totalPrice = 0;
+
+    await cart.save();
+    return cart;
+  }
 
   async getCart(userId: string): Promise<Cart> {
     const user = await this.userModel.findById(userId).populate('cart');

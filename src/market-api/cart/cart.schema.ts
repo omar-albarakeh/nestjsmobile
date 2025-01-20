@@ -1,9 +1,11 @@
-// src/cart/cart.schema.ts
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 
 @Schema()
 export class Cart extends Document {
+  @Prop({ type: String, ref: 'User' }) // Add userId field
+  userId: string;
+
   @Prop({ type: [{ type: String, ref: 'Item' }] }) // Use String instead of ObjectId
   items: string[];
 
