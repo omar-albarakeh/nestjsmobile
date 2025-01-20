@@ -76,6 +76,21 @@ export class CartService {
   return cart;
 }
 
+async clearCart(userId: string): Promise<Cart> {
+  const user = await this.userModel.findById(userId).populate('cart');
+  if (!user || !user.cart) {
+    throw new NotFoundException('User or cart not found');
+  }
+
+  const cart = await this.cartModel.findById(user.cart);
+  cart.items = [];
+  cart.quantities = new Map<string, number>();
+  cart.totalPrice = 0;
+
+  await cart.save();
+  return cart;
+}
+
   async getCart(userId: string): Promise<Cart> {
     const user = await this.userModel.findById(userId).populate('cart');
     if (!user || !user.cart) {
