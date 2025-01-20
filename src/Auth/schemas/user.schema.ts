@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Schema as MongooseSchema, Types } from 'mongoose';
 import { SolarInfo, SolarInfoSchema } from './Solar.Schema';
+import { Cart } from '../../market-api/cart/cart.schema';
 
 @Schema()
 export class User extends Document {
@@ -32,15 +33,13 @@ export class User extends Document {
     type: [{ type: MongooseSchema.Types.ObjectId, ref: 'CommunityPost' }],
     default: [],
   })
-  communityPosts: Types.ObjectId[]; 
+  communityPosts: Types.ObjectId[];
 
-   @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Cart', required: false })
+  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Cart', required: false })
   cart?: Types.ObjectId;
 
-   @Prop({ default: false })
+  @Prop({ default: false })
   blocked: boolean;
-
 }
-
 
 export const UserSchema = SchemaFactory.createForClass(User);

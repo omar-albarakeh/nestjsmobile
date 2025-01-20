@@ -1,7 +1,6 @@
 import { Schema, Document } from 'mongoose';
 
 export const ItemSchema = new Schema({
-    _id: { type: String, required: true }, // Custom _id field
     name: { type: String, required: true },
     price: { type: Number, required: true },
     capacity: { type: Number, required: true },
@@ -11,23 +10,7 @@ export const ItemSchema = new Schema({
     quantity: { type: Number, required: true },
 });
 
-
-ItemSchema.virtual('id').get(function () {
-    return this._id; 
-});
-
-
-ItemSchema.set('toJSON', {
-    virtuals: true,
-    transform: (doc, ret) => {
-        delete ret._id;
-        delete ret.__v;
-        return ret;
-    },
-});
-
 export interface Item extends Document {
-    id: string;
     name: string;
     price: number;
     capacity: number;

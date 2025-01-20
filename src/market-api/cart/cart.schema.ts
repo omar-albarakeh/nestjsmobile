@@ -1,37 +1,17 @@
-// import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-// import { Document, Schema as MongooseSchema, Types } from 'mongoose';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Document, Schema as MongooseSchema, Types } from 'mongoose';
+import { Item } from '../items/item.schema';
 
-// @Schema()
-// export class CartItem {
-//   @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Item', required: true })
-//   item: Types.ObjectId;
+@Schema({ timestamps: true })
+export class Cart extends Document {
+  @Prop({ type: [{ type: MongooseSchema.Types.ObjectId, ref: 'Item' }], default: [] })
+  items: Types.ObjectId[];
 
-//   @Prop({ type: Number, required: true, default: 1 })
-//   quantity: number;
-// }
+  @Prop({ type: Map, of: Number, default: new Map<string, number>() })
+  quantities: Map<string, number>;
 
-// export const CartItemSchema = SchemaFactory.createForClass(CartItem);
+  @Prop({ type: Number, default: 0 })
+  totalPrice: number;
+}
 
-// @Schema()
-// export class Cart extends Document {
-//   @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: true, unique: true })
-//   user: Types.ObjectId;
-
-//   @Prop({ type: [CartItemSchema], default: [] })
-//   items: CartItem[];
-
-//   public addItem(itemId: Types.ObjectId, quantity: number): void {
-//     const existingItem = this.items.find((cartItem) => cartItem.item.equals(itemId));
-//     if (existingItem) {
-//       existingItem.quantity += quantity;
-//     } else {
-//       this.items.push({ item: itemId, quantity });
-//     }
-//   }
-
-//   public removeItem(itemId: Types.ObjectId): void {
-//     this.items = this.items.filter((cartItem) => !cartItem.item.equals(itemId));
-//   }
-// }
-
-// export const CartSchema = SchemaFactory.createForClass(Cart);
+export const CartSchema = SchemaFactory.createForClass(Cart);

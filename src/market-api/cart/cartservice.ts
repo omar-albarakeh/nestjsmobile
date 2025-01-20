@@ -1,38 +1,82 @@
-// import { Injectable, NotFoundException } from '@nestjs/common';
-// import { InjectModel } from '@nestjs/mongoose';
-// import { Model } from 'mongoose';
-// import { Cart } from './cart.schema';
-// import { Item } from '../items/item.schema';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model, Types } from 'mongoose';
+import { Cart } from './cart.schema';
+import { Item } from '../items/item.schema';
+import { User } from '../../Auth/schemas/user.schema';
 
-// @Injectable()
-// export class CartService {
-//   constructor(
-//     @InjectModel(Cart.name) private readonly cartModel: Model<Cart>,
-//     @InjectModel('Item') private readonly itemModel: Model<Item>,
-//   ) {}
+@Injectable()
+export class CartService {
+  constructor(
+    @InjectModel('Cart') private readonly cartModel: Model<Cart>,
+    @InjectModel('Item') private readonly itemModel: Model<Item>,
+    @InjectModel('User') private readonly userModel: Model<User>,
+  ) {}
 
-//   async addItemToCart(userId: string, itemId: string, quantity: number = 1): Promise<Cart> {
-//     const item = await this.itemModel.findById(itemId).exec();
-//     if (!item) {
-//       throw new NotFoundException('Item not found');
-//     }
+  async createCart(userId: string): Promise<Cart> {
+    const newCart = new this.cartModel();
+    await newCart.save();
 
-//     let cart = await this.cartModel.findOne({ user: userId }).exec();
-//     if (!cart) {
-//       cart = new this.cartModel({ user: userId, items: [] });
-//     }
+    await this.userModel.findByIdAndUpdate(userId, { cart: newCart._id });
 
-//     cart.addItem(item._id, quantity);
-//     return cart.save();
-//   }
+    return newCart;
+  }
 
-//   async removeItemFromCart(userId: string, itemId: string): Promise<Cart> {
-//     const cart = await this.cartModel.findOne({ user: userId }).exec();
-//     if (!cart) {
-//       throw new NotFoundException('Cart not found');
-//     }
 
-//     cart.removeItem(itemId);
-//     return cart.save();
-//   }
-// }
+  async addItemToCart(userId: string, itemId: string, quantity: number): Promise<Cart> {
+    const user = await this.userModel.findById(userId).populate('cart');
+    if (!user || !user.cart) {
+      throw new NotFoundException('User or cart not found');
+    }
+
+    const item = await this.itemModel.findById(itemId);
+    if (!item) {
+      throw new NotFoundException('Item not found');
+    }
+
+    const cart = await this.cartModel.findById(user.cart);
+
+    cart.items.push(item._id as Types.ObjectId);
+    cart.quantities.set(item._id.toString(), quantity);
+    cart.totalPrice += item.price * quantity;
+
+    await cart.save();
+    return cart;
+  }
+
+  async removeItemFromCart(userId: string, itemId: string): Promise<Cart> {
+    const user = await this.userModel.findById(userId).populate('cart');
+    if (!user || !user.cart) {
+      throw new NotFoundException('User or cart not found');
+    }
+
+    const cart = await this.cartModel.findById(user.cart);
+
+    const itemIndex = cart.items.findIndex(
+      (cartItemId) => cartItemId.toString() === itemId,
+    );
+
+    if (itemIndex > -1) {
+      const item = await this.itemModel.findById(itemId);
+      if (item) {
+
+        cart.totalPrice -= item.price * (cart.quantities.get(itemId) || 0);
+
+        cart.items.splice(itemIndex, 1);
+        cart.quantities.delete(itemId);
+      }
+    }
+
+    await cart.save();
+    return cart;
+  }
+
+
+  async getCart(userId: string): Promise<Cart> {
+    const user = await this.userModel.findById(userId).populate('cart');
+    if (!user || !user.cart) {
+      throw new NotFoundException('User or cart not found');
+    }
+    return this.cartModel.findById(user.cart).populate('items');
+  }
+}
